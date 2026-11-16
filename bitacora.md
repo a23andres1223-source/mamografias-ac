@@ -7,3 +7,5 @@ Una fila por decisión o dificultad relevante. Escríbela **el mismo día**, con
 | 2026-11-15 | (ej.) Elegir dataset y unidad de análisis | CBIS-DDSM por lesión / VinDr-Mammo por examen (BI-RADS) | (ej.) CBIS-DDSM por lesión, porque tiene patología | commit ____ | (qué hiciste tú) |
 | | | | | | |
 | | | | | | |
+| 16/11/2026 | Configurar el entorno de trabajo | PC local sin GPU / Colab con GPU | Colab con GPU, Drive para respaldo y repo en GitHub | primer commit |  |
+| 16/11/2026 | Definir qué clasifica el modelo y con qué etiquetas | Clasificar imagen completa, paciente o lesión | Lesión (recorte) con patología como etiqueta | hipotesis.md y mapeo_etiquetas.md |  elegí la unidad de análisis, redacté las hipótesis, entendí por qué se agrupan las etiquetas |

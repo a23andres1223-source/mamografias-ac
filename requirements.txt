@@ -1,0 +1,11 @@
+torch
+torchvision
+numpy
+pandas
+scikit-learn
+pydicom
+pillow
+matplotlib
+gradio
+tqdm
+# Al terminar el proyecto ejecuta `pip freeze > requirements-lock.txt` y adjunta las versiones exactas.

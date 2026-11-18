@@ -1,6 +1,6 @@
 # Mapeo de etiquetas (dataset → proyecto)
 
-Fuente: CBIS-DDSM (TCIA), columna `pathology` de los CSV `calc_*` y `mass_*`.
+Fuente: CBIS-DDSM (TCIA), columna `pathology` de los CSV `mass_case_description_train_set.csv` y `mass_case_description_test_set.csv` (solo masas).
 
 | Etiqueta original | Significado | Etiqueta del proyecto |
 |---|---|---|
@@ -10,28 +10,18 @@ Fuente: CBIS-DDSM (TCIA), columna `pathology` de los CSV `calc_*` y `mass_*`.
 
 Notas:
 - No se usa la columna `assessment` (BI-RADS) como etiqueta.
-- Filas con otra patología o sin imagen encontrada se **excluyen** y se cuentan en la salida de `prepare_data.py` (anótalas en el informe).
 - La etiqueta describe la **lesión**, no a la paciente.
+- Se excluyeron 5 lesiones por no encontrarse su DICOM (1.696 filas en los CSV y 1.691 con imagen).
+- Se agrupan BENIGN y BENIGN_WITHOUT_CALLBACK (141 de las 911 benignas); es una simplificación a documentar en las limitaciones.
 
-Datos a documentar en el informe (rellena): versión del dataset ____ | licencia ____ | nº pacientes ____ | nº lesiones ____ | vistas CC/MLO ____ | subconjunto descargado ____
-
-## Datos del dataset 
+## Datos del dataset
 - Versión: Version 1: Updated 2017/09/14
-- Licencia: CC BY 3.0 
+- Licencia: CC BY 3.0
 - Cita: Lee et al. (2016), Curated Breast Imaging Subset of DDSM, TCIA, DOI 10.7937/K9/TCIA.2016.7O02S9CY
-- Subconjunto descargado: solo recortes y máscaras de masas ([2 CSV / solo el CSV de entrenamiento])
-- Calcificaciones: no usadas en este proyecto
+- Subconjunto descargado: solo recortes y máscaras de masas, de los dos CSV oficiales (train y test): 1.799 series y 3.382 archivos DICOM (≈ 27 GB)
+- Calcificaciones y mamografías completas: no usadas en este proyecto
 
-## Datos del dataset 
-- Versión: Version 1: Updated 2017/09/14
-- Licencia: CC BY 3.0 
-- Cita: Lee et al. (2016), Curated Breast Imaging Subset of DDSM, TCIA, DOI 10.7937/K9/TCIA.2016.7O02S9CY
-- Subconjunto descargado: solo recortes y máscaras de masas ([2 CSV / solo el CSV de entrenamiento])
-- Calcificaciones: no usadas en este proyecto
-
-## Datos del dataset 
-- Versión: Version 1: Updated 2017/09/14
-- Licencia: CC BY 3.0 
-- Cita: Lee et al. (2016), Curated Breast Imaging Subset of DDSM, TCIA, DOI 10.7937/K9/TCIA.2016.7O02S9CY
-- Subconjunto descargado: solo recortes y máscaras de masas ([2 CSV / solo el CSV de entrenamiento])
-- Calcificaciones: no usadas en este proyecto
+## Datos del proyecto
+- **Tamaño:** 892 pacientes y 1.691 lesiones (911 benignas y 780 malignas)
+- **Vistas:** CC 779 y MLO 912
+- **Particiones (por paciente, semilla 42):** train 1.174, val 244, test 273

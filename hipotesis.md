@@ -18,3 +18,10 @@
 - Uso solo masas y un subconjunto de CBIS-DDSM, con pocos pacientes y un único origen de datos, por lo que los resultados pueden no generalizar.
 - El modelo clasifica recortes ya localizados por un radiólogo. No detecta lesiones.
 - La puntuación del modelo no es una probabilidad clínica calibrada.
+
+## H3 (aumento de datos) — escrita el 18/11/2026
+- **Hipótesis:** sin aumento de datos, ResNet18 sobreajustará más: el val_loss subirá más y el val_AUC será menor que con aumento.
+- **Cómo la contrasté:** entrené `resnet18_sin_aug` (mismo modelo, semilla y épocas, con `--no-augment`) y comparé con `resnet18_base`.
+- **Resultado:** el sobreajuste fue mayor (train_loss final 0,011 frente a 0,113; val_loss máximo 1,14 frente a 0,85), pero el mejor val_AUC fue igual (0,837 frente a 0,836).
+- **Conclusión:** se cumple la parte del sobreajuste, no la del AUC. 
+- **Limitaciones:** un solo entrenamiento por modelo, una semilla y 244 lesiones de validación; el AUC varía ±0,03 entre épocas.

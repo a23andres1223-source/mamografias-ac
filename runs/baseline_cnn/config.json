@@ -1,0 +1,22 @@
+{
+  "model": "baseline",
+  "epochs": 15,
+  "batch_size": 32,
+  "lr": 0.001,
+  "optimizer": "adam",
+  "seed": 42,
+  "no_augment": false,
+  "freeze": false,
+  "no_pretrained": false,
+  "workers": 2,
+  "run_name": "baseline_cnn",
+  "device": "cuda",
+  "n_train": 1174,
+  "n_val": 244,
+  "class_counts_train": {
+    "benigna": 628,
+    "maligna": 546
+  },
+  "best_val_auc": 0.6340840336134455,
+  "train_seconds": 160.9
+}

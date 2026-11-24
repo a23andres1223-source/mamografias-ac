@@ -175,3 +175,7 @@ h2#referencias ~ p {
   padding-left: 1.4em;
   text-indent: -1.4em;
 }
+
+thead th, caption, td { hyphens: manual; }
+table { break-inside: avoid; }
+caption { break-after: avoid; }

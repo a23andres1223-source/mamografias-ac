@@ -3,7 +3,8 @@
 > **Prototipo académico; no apto para diagnóstico ni decisiones clínicas.**
 > Clasifica recortes de masas con patología conocida. No detecta lesiones ni diagnostica pacientes.
 
-Proyecto final de Aprendizaje Computacional – Ingeniería de Sistemas. Informe: [`informe.md`](informe.md).
+Proyecto final de Aprendizaje Computacional – Ingeniería de Sistemas, Universidad de Córdoba.
+**Integrantes:** Andrés Alfonso Burgos y Carmelo de Jesús Quiceno Páez. Informe: [`informe.md`](informe.md).
 
 ## Resultado final
 
@@ -39,7 +40,6 @@ Las imágenes no están en el repositorio (`data/` está en `.gitignore`); los d
 | `eda/`, `eda_conclusiones.md` | Análisis exploratorio |
 | `hipotesis.md`, `mapeo_etiquetas.md` | Problema, hipótesis y etiquetas |
 | `bitacora.md`, `registro_ia.md` | Bitácora de decisiones y registro de uso de IA |
-| `guia_sustentacion.md` | Preguntas de práctica para la sustentación |
 | `requirements.txt`, `requirements-lock.txt`, `entorno.json` | Dependencias y versiones exactas del entorno final |
 
 ## Cómo reproducir
@@ -67,11 +67,11 @@ En Google Colab (GPU T4) se usó el cuaderno `MamografiasProyecto.ipynb`; la sec
    python evaluate.py --run resnet18_base --split val --target-sensitivity 0.90
    python evaluate.py --run resnet18_base --split test
    ```
-5. Interfaz: `python app.py --run resnet18_base` (añade `--share` para un enlace temporal).
+5. Interfaz: `python app.py --run resnet18_base` (con `--share` genera un enlace temporal).
 
 ## Cambios en vivo
 
-| Te piden… | Haz esto |
+| Cambio | Cómo hacerlo |
 |---|---|
 | Cambiar el umbral | `python evaluate.py --run resnet18_base --split val --threshold 0.35` |
 | Localizar un falso negativo | `runs/<run>/errors_val.csv` (columna `error` = falso_negativo, `png_path`) y `fn_grid_val.png` |

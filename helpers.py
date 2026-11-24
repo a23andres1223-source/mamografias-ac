@@ -56,6 +56,6 @@ def commit(msg):
         print(o); return False
     c, o = sh('git push origin main')
     if c != 0:
-        print(o); print('Push rechazado: usa la tabla de errores de Git (no uses --force).'); return False
+        print(o); print('Push rechazado.'); return False
     print('Commit y push OK:', msg)
     return True

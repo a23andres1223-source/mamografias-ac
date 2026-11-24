@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="$lang$">
+<head>
+<meta charset="utf-8">
+<title>$title$</title>
+$for(css)$
+<link rel="stylesheet" href="$css$">
+$endfor$
+</head>
+<body>
+<section class="portada">
+  <div class="portada-sup">
+    <p class="institucion">Universidad de Córdoba</p>
+    <p class="programa">Programa de Ingeniería de Sistemas</p>
+  </div>
+  <div class="portada-centro">
+    <p class="curso">$curso$</p>
+    <h1>$title$</h1>
+    <p class="subtitulo">$subtitle$</p>
+  </div>
+  <div class="portada-inf">
+    <div class="autores">
+$for(author)$
+      <p>$author$</p>
+$endfor$
+    </div>
+    <p class="fecha">$date$</p>
+    <p class="repo">$repositorio$</p>
+  </div>
+</section>
+<main>
+$body$
+</main>
+</body>
+</html>

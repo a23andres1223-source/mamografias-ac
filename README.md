@@ -40,6 +40,7 @@ Las imágenes no están en el repositorio (`data/` está en `.gitignore`); los d
 | `eda/`, `eda_conclusiones.md` | Análisis exploratorio |
 | `hipotesis.md`, `mapeo_etiquetas.md` | Problema, hipótesis y etiquetas |
 | `bitacora.md`, `registro_ia.md` | Bitácora de decisiones y registro de uso de IA |
+| `informe.md`, `informe.pdf`, `informe.docx`, `informe/` | Informe final y el script, plantilla y estilo con que se genera (`python informe/generar_informe.py`) |
 | `requirements.txt`, `requirements-lock.txt`, `entorno.json` | Dependencias y versiones exactas del entorno final |
 
 ## Cómo reproducir

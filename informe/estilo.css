@@ -1,0 +1,177 @@
+/* Estilo del informe: tipografía IBM Plex, paleta negro / blanco / gris. */
+
+@page {
+  size: Letter;
+  margin: 2.5cm 2.3cm 2.4cm 2.3cm;
+  @top-left {
+    content: "Clasificación de masas mamográficas · CBIS-DDSM";
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 7.5pt;
+    letter-spacing: 0.04em;
+    color: #8c8c8c;
+    vertical-align: bottom;
+    padding-bottom: 8pt;
+  }
+  @top-right {
+    content: "Alfonso Burgos · Quiceno Páez";
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 7.5pt;
+    color: #8c8c8c;
+    vertical-align: bottom;
+    padding-bottom: 8pt;
+  }
+  @bottom-right {
+    content: counter(page);
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 8.5pt;
+    color: #444;
+  }
+}
+
+@page :first {
+  margin: 0;
+  @top-left { content: none; }
+  @top-right { content: none; }
+  @bottom-right { content: none; }
+}
+
+html { font-size: 10.4pt; }
+
+body {
+  font-family: "IBM Plex Serif", "TeX Gyre Pagella", Georgia, serif;
+  line-height: 1.52;
+  color: #111;
+  text-align: justify;
+  hyphens: auto;
+  font-kerning: normal;
+}
+
+/* Portada */
+.portada {
+  height: 27.9cm;
+  box-sizing: border-box;
+  padding: 3.2cm 2.6cm 2.6cm 2.6cm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-left: 0.9cm solid #111;
+  page-break-after: always;
+  text-align: left;
+  font-family: "IBM Plex Sans", sans-serif;
+}
+.portada p { margin: 0; }
+.institucion { font-size: 13pt; font-weight: 600; letter-spacing: 0.02em; }
+.programa { font-size: 10.5pt; color: #444; margin-top: 3pt !important; }
+.curso {
+  font-size: 9pt; text-transform: uppercase; letter-spacing: 0.14em; color: #8c8c8c;
+  margin-bottom: 14pt !important;
+}
+.portada h1 {
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 25pt; line-height: 1.18; font-weight: 600; margin: 0;
+  border: none; padding: 0; text-align: left;
+}
+.subtitulo { font-size: 13pt; color: #444; margin-top: 12pt !important; }
+.portada-centro { border-top: 1.2pt solid #111; padding-top: 18pt; }
+.autores p { font-size: 11.5pt; line-height: 1.6; }
+.fecha { font-size: 10pt; color: #444; margin-top: 14pt !important; }
+.repo { font-family: "IBM Plex Mono", monospace; font-size: 8.5pt; color: #8c8c8c; margin-top: 4pt !important; }
+
+/* Títulos */
+h2 {
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 12.5pt;
+  font-weight: 600;
+  color: #111;
+  margin: 20pt 0 8pt 0;
+  padding-bottom: 4pt;
+  border-bottom: 0.6pt solid #111;
+  text-align: left;
+  page-break-after: avoid;
+}
+h2#resumen { margin-top: 0; }
+h3 { font-family: "IBM Plex Sans", sans-serif; font-size: 10.5pt; font-weight: 600; color: #444; }
+
+p { margin: 0 0 7pt 0; orphans: 3; widows: 3; }
+p strong { font-family: "IBM Plex Sans", sans-serif; font-weight: 600; font-size: 0.95em; }
+em { font-style: italic; }
+
+code {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.86em;
+  color: #333;
+  background: #f0f0f0;
+  padding: 0 2pt;
+}
+
+/* Aviso */
+blockquote {
+  margin: 10pt 0 4pt 0;
+  padding: 7pt 11pt;
+  background: #f2f2f2;
+  border-left: 2.5pt solid #111;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 8.8pt;
+  color: #333;
+  text-align: left;
+}
+blockquote p { margin: 0; }
+
+/* Tablas */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 6pt 0 14pt 0;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 8.6pt;
+  line-height: 1.35;
+  text-align: left;
+  page-break-inside: avoid;
+}
+caption {
+  caption-side: top;
+  text-align: left;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 8.6pt;
+  font-weight: 600;
+  color: #111;
+  padding-bottom: 5pt;
+}
+thead th {
+  font-weight: 600;
+  border-top: 1.2pt solid #111;
+  border-bottom: 0.6pt solid #111;
+  padding: 4pt 6pt;
+  vertical-align: bottom;
+}
+tbody td {
+  padding: 3.2pt 6pt;
+  border-bottom: 0.3pt solid #d0d0d0;
+  vertical-align: top;
+}
+tbody tr:last-child td { border-bottom: 1.2pt solid #111; }
+tbody tr:nth-child(even) td { background: #f7f7f7; }
+
+/* Figuras */
+figure {
+  margin: 10pt 0 14pt 0;
+  text-align: center;
+  page-break-inside: avoid;
+}
+figure img { max-width: 100%; }
+figcaption {
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 8.6pt;
+  color: #444;
+  margin-top: 5pt;
+  text-align: center;
+}
+
+/* Referencias */
+h2#referencias ~ p {
+  font-size: 9pt;
+  line-height: 1.4;
+  text-align: left;
+  padding-left: 1.4em;
+  text-indent: -1.4em;
+}

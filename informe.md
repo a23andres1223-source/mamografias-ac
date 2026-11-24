@@ -1,179 +1,171 @@
 ---
-title: "Clasificación de lesiones mamográficas benignas y malignas con transferencia de aprendizaje (CBIS-DDSM)"
-subtitle: "Proyecto final – Aprendizaje Computacional, Ingeniería de Sistemas, Universidad de Córdoba"
+title: "Clasificación de masas mamográficas benignas y malignas mediante transferencia de aprendizaje"
+subtitle: "Estudio sobre el conjunto CBIS-DDSM"
+curso: "Aprendizaje Computacional · Proyecto final"
 author:
   - Andrés Alfonso Burgos
   - Carmelo de Jesús Quiceno Páez
 date: "Noviembre de 2026"
+repositorio: "github.com/a23andres1223-source/mamografias-ac"
 lang: es
 ---
 
-> **Prototipo académico; no apto para diagnóstico ni decisiones clínicas.**
-> Repositorio: https://github.com/a23andres1223-source/mamografias-ac
-
 ## Resumen
 
-Este trabajo construye un clasificador de recortes de masas mamográficas en dos clases, benigna y maligna, usando como etiqueta el resultado de patología del conjunto público CBIS-DDSM. Se trabajó con 1.691 lesiones de 892 pacientes, partidas por paciente en entrenamiento, validación y prueba para evitar fuga de datos. Se compararon una red convolucional pequeña entrenada desde cero, que sirvió como línea base, y una ResNet18 preentrenada en ImageNet, con y sin aumento de datos. Como el error más costoso es no detectar una lesión maligna, el umbral de decisión se eligió en validación para lograr una sensibilidad de al menos 0,90. El modelo final, ResNet18 con aumento y umbral 0,045, se evaluó una sola vez en el conjunto de prueba: ROC-AUC 0,821, sensibilidad 0,896 y especificidad 0,500. La transferencia de aprendizaje superó con claridad a la línea base (AUC de validación 0,836 frente a 0,634). Su principal limitación es el número de falsos positivos: la mitad de las lesiones benignas se marcan como sospechosas.
+Se desarrolló un clasificador binario de recortes de masas mamográficas cuya etiqueta es el resultado histopatológico (benigno o maligno) registrado en el conjunto público CBIS-DDSM. El estudio incluyó 1.691 lesiones de 892 pacientes, distribuidas por paciente en particiones de entrenamiento, validación y prueba. Se comparó una red convolucional pequeña entrenada desde cero con una ResNet18 preentrenada en ImageNet, con y sin aumento de datos. Dado que el error de mayor costo es omitir una lesión maligna, el umbral de decisión se fijó en validación para alcanzar una sensibilidad mínima de 0,90. El modelo seleccionado, una ResNet18 con aumento de datos y umbral 0,045, obtuvo en el conjunto de prueba un ROC-AUC de 0,821, una sensibilidad de 0,896 y una especificidad de 0,500. La transferencia de aprendizaje superó ampliamente a la línea base (AUC de validación de 0,836 frente a 0,634); la limitación principal es la elevada tasa de falsos positivos.
 
-## 1. Problema y alcance
+*Palabras clave:* mamografía, CBIS-DDSM, transferencia de aprendizaje, ResNet18, sensibilidad, umbral de decisión.
 
-El cáncer de mama se estudia con mamografía. Cuando el radiólogo encuentra una masa, la pregunta clínica es si es benigna o maligna, y la respuesta definitiva la da la patología (biopsia). Este proyecto aborda una versión acotada de esa pregunta: dado el **recorte de una masa ya localizada**, estimar si su patología es benigna o maligna.
+> Prototipo académico, sin validación clínica. No debe emplearse para diagnóstico ni para tomar decisiones sobre pacientes.
 
-- **Unidad de análisis:** una lesión (masa), representada por su recorte en la mamografía. No se clasifica a la paciente, la mama ni el examen completo, y el modelo no detecta lesiones: recibe recortes que ya marcó un radiólogo.
-- **Etiqueta:** la columna `pathology` de CBIS-DDSM. No se usa la evaluación BI-RADS, que expresa sospecha radiológica y no un resultado confirmado.
-- **Usuario previsto:** estudiantes y docentes de la asignatura. Es un prototipo educativo, no una herramienta de apoyo diagnóstico.
+## 1. Planteamiento del problema
 
-**Costo de los errores.** Un falso negativo (una maligna clasificada como benigna) es el error más grave, porque una lesión que requiere seguimiento quedaría sin él. Un falso positivo (una benigna marcada como maligna) genera estudios adicionales y ansiedad, pero es menos grave. Por eso se priorizó la **sensibilidad** de la clase maligna y se aceptó perder especificidad.
+La mamografía es la herramienta habitual de tamizaje del cáncer de mama. Ante una masa sospechosa, la confirmación de su naturaleza benigna o maligna se obtiene mediante biopsia. Este trabajo aborda una versión acotada de dicha tarea: a partir del recorte de una masa previamente localizada por un radiólogo, estimar si su resultado histopatológico es benigno o maligno.
+
+La unidad de análisis es la lesión individual y no la paciente, la mama o el examen completo. La etiqueta corresponde a la columna `pathology` de CBIS-DDSM; no se utilizó la categoría BI-RADS, que expresa un grado de sospecha radiológica y no un diagnóstico confirmado. El modelo no detecta lesiones: recibe recortes ya delimitados. El público previsto son estudiantes y docentes de la asignatura.
+
+Los dos tipos de error tienen consecuencias asimétricas. Un falso negativo, es decir, una lesión maligna clasificada como benigna, puede retrasar un tratamiento necesario. Un falso positivo genera estudios adicionales y ansiedad, pero su costo es menor. Por esta razón se dio prioridad a la sensibilidad de la clase maligna, aun a costa de la especificidad.
 
 ## 2. Datos
 
+Se utilizó CBIS-DDSM (Lee et al., 2017), versión 1, distribuido por The Cancer Imaging Archive bajo licencia CC BY 3.0. Debido a que la colección completa ocupa cerca de 163,6 GB, el manifiesto de descarga se filtró con los identificadores de serie de los archivos de masas, y se obtuvieron únicamente los recortes y sus máscaras (1.799 series, 3.382 archivos DICOM, aproximadamente 27 GB).
+
 | Aspecto | Valor |
 |---|---|
-| Fuente | CBIS-DDSM (The Cancer Imaging Archive), versión 1 (2017/09/14), licencia CC BY 3.0 |
-| Subconjunto usado | Solo masas: recortes y máscaras ROI de los CSV oficiales de entrenamiento y prueba (1.799 series, 3.382 archivos DICOM, ≈27 GB) |
-| Filas en los CSV / con imagen | 1.696 / 1.691 (5 excluidas por no encontrarse su DICOM) |
+| Registros en los CSV de masas | 1.696 |
+| Registros con imagen disponible | 1.691 (5 excluidos por ausencia del DICOM) |
 | Pacientes | 892 (1,9 lesiones por paciente en promedio; máximo 14) |
-| Clases | 911 benignas (53,9 %) y 780 malignas (46,1 %) |
+| Lesiones benignas | 911 (53,9 %) |
+| Lesiones malignas | 780 (46,1 %) |
 
-El conjunto completo pesa unos 163,6 GB y no cabía en Colab, así que el manifiesto de descarga se filtró con los identificadores de serie de los CSV de masas y se descargaron solo los recortes y sus máscaras con NBIA Data Retriever.
+: Tabla 1. Composición del subconjunto utilizado.
 
-**Mapeo de etiquetas.** `BENIGN` y `BENIGN_WITHOUT_CALLBACK` se agrupan como benigna (0), porque en ambos casos la patología no encontró cáncer; `MALIGNANT` es maligna (1). 141 de las 911 benignas son `BENIGN_WITHOUT_CALLBACK`; agruparlas es una simplificación.
+Las categorías `BENIGN` y `BENIGN_WITHOUT_CALLBACK` se agruparon en la clase benigna, puesto que en ambas el estudio histopatológico descartó malignidad; `MALIGNANT` constituye la clase maligna. De las 911 lesiones benignas, 141 pertenecen a la segunda categoría, lo cual representa una simplificación que se discute en la sección 10.
 
-**Partición por paciente.** Una misma paciente puede tener varias lesiones y vistas. Si sus imágenes quedaran repartidas entre entrenamiento y prueba, el modelo podría reconocer a la paciente y no a la lesión, y las métricas serían engañosas. Por eso la partición se hizo con `GroupShuffleSplit` agrupando por `patient_id` (semilla 42), y `check_split.py` confirmó que no hay pacientes ni imágenes compartidas. Se mezclaron los CSV oficiales de entrenamiento y prueba para construir particiones propias, de modo que no se conserva la separación oficial de CBIS-DDSM.
+Una misma paciente puede aportar varias lesiones y proyecciones. Si sus imágenes se distribuyeran entre entrenamiento y prueba, el modelo podría reconocer características de la paciente y no de la lesión, lo que inflaría las métricas. Por ello la partición se realizó con `GroupShuffleSplit`, agrupando por identificador de paciente y con semilla 42, y se verificó que ninguna paciente aparece en más de una partición. Las particiones se construyeron a partir de los archivos oficiales de entrenamiento y prueba combinados, de modo que no corresponden a la división original de CBIS-DDSM.
 
-| Partición | Lesiones | Pacientes | % malignas |
+| Partición | Lesiones | Pacientes | Proporción de malignas |
 |---|---|---|---|
 | Entrenamiento | 1.174 | 624 | 46,5 % |
 | Validación | 244 | 134 | 48,8 % |
 | Prueba | 273 | 134 | 42,1 % |
 
+: Tabla 2. Particiones por paciente.
+
 ## 3. Análisis exploratorio
 
-![Distribución de clases por partición](eda/clases_por_particion.png){width=70%}
+![Figura 1. Número de lesiones por clase en cada partición.](informe/figuras/clases_por_particion.png){width=62%}
 
-Las clases están relativamente equilibradas, aunque la prueba tiene menos malignas (42,1 %) que entrenamiento y validación. Esto afecta métricas que dependen de la prevalencia, como la precisión, pero no el AUC.
+Las clases presentan un equilibrio razonable en las tres particiones, aunque la prueba contiene una menor proporción de lesiones malignas. Esta diferencia afecta a las métricas que dependen de la prevalencia, como la precisión, pero no al ROC-AUC.
 
-Para descartar atajos, se midió cuánto separa las clases cada variable simple usada por sí sola:
+Para descartar la existencia de atajos triviales se evaluó la capacidad discriminativa de variables simples consideradas de forma aislada. El área del recorte alcanzó un AUC de 0,570, el ancho y el alto 0,563 y 0,570, y la intensidad media 0,530. Aunque las lesiones malignas son en promedio algo mayores (381 × 373 frente a 355 × 350 píxeles), la variabilidad es alta y ninguna de estas variables separa las clases por sí sola. Ambas proyecciones (CC y MLO) y ambos lados están representados en las dos clases.
 
-| Variable como único predictor | AUC |
-|---|---|
-| Área del recorte | 0,570 |
-| Ancho / alto | 0,563 / 0,570 |
-| Intensidad media | 0,530 |
-
-Todas están cerca de 0,5. Las malignas son en promedio algo más grandes (381 × 373 px frente a 355 × 350 px), pero con mucha variabilidad, así que ninguna variable trivial resuelve el problema. Hay vistas CC y MLO y lesiones de ambos lados en las dos clases, por lo que tampoco hay un sesgo evidente por vista o lado.
-
-**Decisión derivada del EDA.** Los recortes tienen tamaños y proporciones muy variables. Redimensionarlos directamente a 224 × 224 deformaría la lesión, así que primero se rellenan con negro hasta hacerlos cuadrados y luego se redimensionan.
+Los recortes presentan tamaños y proporciones muy diversos. Para no deformar la morfología de la lesión, cada imagen se completó con relleno negro hasta obtener un cuadrado antes de redimensionarla.
 
 ## 4. Metodología
 
-**Preprocesamiento.** Los DICOM se convierten a PNG de 8 bits recortando la intensidad a los percentiles 1–99, para que unos pocos píxeles extremos no aplasten el contraste. Cada imagen se rellena a cuadrado, se redimensiona a 224 × 224, se replica a 3 canales (los modelos preentrenados esperan RGB) y se normaliza con la media y la desviación de ImageNet. El aumento de datos (volteo horizontal, rotación de hasta 10° y pequeñas variaciones de brillo y contraste) se aplica solo en entrenamiento; aplicarlo en validación o prueba cambiaría lo que se mide.
+**Preprocesamiento.** Las imágenes DICOM se convirtieron a 8 bits recortando la intensidad entre los percentiles 1 y 99, con el fin de evitar que valores extremos redujeran el contraste. Posteriormente se aplicó el relleno a formato cuadrado, el redimensionamiento a 224 × 224 píxeles, la replicación a tres canales y la normalización con las estadísticas de ImageNet. El aumento de datos (volteo horizontal, rotación de hasta 10° y variaciones leves de brillo y contraste) se aplicó exclusivamente durante el entrenamiento.
 
-**Modelos.**
+**Modelos.** Como línea base se entrenó desde cero una red convolucional pequeña (tasa de aprendizaje 1e-3). El modelo principal fue una ResNet18 (He et al., 2016) preentrenada en ImageNet y ajustada en todas sus capas con Adam (tasa de aprendizaje 1e-4, lotes de 32, 15 épocas). Con apenas 1.174 lesiones de entrenamiento, reutilizar filtros previamente aprendidos resulta más adecuado que aprenderlos desde cero. En ambos casos se emplearon pesos de clase en la función de pérdida y se conservó la época con mayor ROC-AUC en validación.
 
-- *Línea base:* una CNN pequeña entrenada desde cero (tasa de aprendizaje 1e-3). Sirve de referencia para saber si la transferencia aporta.
-- *ResNet18 preentrenada en ImageNet*, con ajuste de todas las capas (tasa de aprendizaje 1e-4, Adam, lote 32, 15 épocas). Con solo 1.174 lesiones de entrenamiento, partir de filtros ya aprendidos (bordes, texturas) es más prometedor que aprender todo desde cero.
-
-En ambos casos se usaron pesos de clase en la pérdida y se guardó la época con mejor ROC-AUC de **validación**.
-
-**Elección del umbral.** El modelo produce una puntuación entre 0 y 1. En lugar del umbral convencional de 0,5, se eligió en validación el mayor umbral que logra sensibilidad ≥ 0,90. La prueba nunca se usó para ajustar nada: se evaluó una sola vez, al final, con el modelo y el umbral ya fijados.
+**Umbral de decisión.** En lugar del umbral convencional de 0,5, se seleccionó en validación el mayor umbral que garantiza una sensibilidad de al menos 0,90. El conjunto de prueba no intervino en ninguna decisión: se evaluó una única vez, con el modelo y el umbral ya fijados.
 
 ## 5. Experimentos en validación
 
-Validación: 244 lesiones (119 malignas, 125 benignas).
+El conjunto de validación contiene 244 lesiones, de las cuales 119 son malignas y 125 benignas. La Tabla 3 resume los tres modelos con el umbral correspondiente a una sensibilidad de 0,908.
 
-| Modelo | Mejor val_AUC | Umbral (sens. ≥ 0,90) | Sensibilidad | Especificidad | FP | FN |
+| Modelo | AUC | Umbral | Sensibilidad | Especificidad | FP | FN |
 |---|---|---|---|---|---|---|
 | CNN pequeña (línea base) | 0,634 | 0,344 | 0,908 | 0,128 | 109 | 11 |
 | ResNet18 con aumento | 0,836 | 0,045 | 0,908 | 0,512 | 61 | 11 |
 | ResNet18 sin aumento | 0,837 | 0,075 | 0,908 | 0,592 | 51 | 11 |
 
-**Transferencia frente a línea base.** La CNN pequeña casi no aprendió: su pérdida de validación se quedó en torno a 0,69 (equivalente a adivinar) y, con umbral 0,5, solo detecta 23 de 119 malignas (sensibilidad 0,193). Exigiendo la misma sensibilidad de 0,908, la línea base produce 109 falsos positivos frente a 61 de ResNet18. La transferencia de aprendizaje mejora el AUC en 0,20 y es la diferencia entre un modelo inútil y uno razonable.
+: Tabla 3. Comparación de modelos en validación.
 
-**Sobreajuste.** ResNet18 con aumento bajó su pérdida de entrenamiento hasta 0,113, mientras la de validación pasó de 0,52 (época 2) a 0,69, con un máximo de 0,85. El modelo memoriza parte del entrenamiento; con tan pocos datos es esperable. Por eso el AUC de 0,836 se toma con cautela: oscila unos ±0,03 entre épocas.
+La red entrenada desde cero apenas aprendió: su pérdida de validación permaneció cerca de 0,69, valor equivalente a una predicción aleatoria, y con umbral 0,5 solo identificó 23 de las 119 lesiones malignas. Con la misma sensibilidad, la ResNet18 redujo los falsos positivos de 109 a 61. La transferencia de aprendizaje incrementó el AUC en 0,20 puntos.
 
-**Experimento controlado: aumento de datos.** Se repitió el entrenamiento de ResNet18 cambiando una sola cosa (sin aumento) y manteniendo semilla, partición y épocas. Sin aumento, el sobreajuste fue mayor (pérdida de entrenamiento 0,011 y de validación hasta 1,14), pero el AUC fue prácticamente igual (0,837 frente a 0,836) y, con la misma sensibilidad, dio 10 falsos positivos menos.
+La ResNet18 con aumento mostró sobreajuste: la pérdida de entrenamiento descendió hasta 0,113, mientras que la de validación pasó de 0,52 en la segunda época a 0,69 al final, con un máximo de 0,85. En consecuencia, el AUC de 0,836 debe interpretarse con cautela, ya que oscila alrededor de ±0,03 entre épocas.
 
-**Elección del modelo final.** Los dos ResNet18 empatan en AUC y sensibilidad. Se eligió el modelo **con aumento** por la estabilidad de su entrenamiento: el modelo sin aumento llegó a memorizar casi por completo el entrenamiento, y una ventaja de 10 falsos positivos en una sola corrida con una semilla no es lo bastante sólida para preferir un modelo más sobreajustado. La elección se fijó antes de abrir la prueba.
+Para evaluar el efecto del aumento de datos se repitió el entrenamiento modificando únicamente ese factor y manteniendo semilla, partición y número de épocas. Sin aumento, el sobreajuste fue más pronunciado (pérdida de entrenamiento de 0,011 y pérdida de validación de hasta 1,14), aunque el AUC fue prácticamente idéntico y, con igual sensibilidad, se obtuvieron 10 falsos positivos menos.
 
-**Efecto del umbral** (ResNet18 con aumento, validación):
+Ambas variantes de ResNet18 coinciden en AUC y sensibilidad. Se eligió como modelo final la variante con aumento de datos por la mayor estabilidad de su entrenamiento: la alternativa memorizó casi por completo el conjunto de entrenamiento, y una diferencia de 10 falsos positivos observada en una sola ejecución no constituye evidencia suficiente para preferirla. La elección se realizó antes de evaluar el conjunto de prueba.
 
-| Umbral | TN | FP | FN | TP | Sensibilidad | Especificidad | Exactitud |
+| Umbral | VN | FP | FN | VP | Sensibilidad | Especificidad | Exactitud |
 |---|---|---|---|---|---|---|---|
 | 0,50 | 99 | 26 | 37 | 82 | 0,689 | 0,792 | 0,742 |
 | 0,30 | 90 | 35 | 28 | 91 | 0,765 | 0,720 | 0,742 |
 | 0,045 | 64 | 61 | 11 | 108 | 0,908 | 0,512 | 0,705 |
 
-Con 0,5 y con 0,3 la exactitud es idéntica (0,742), pero 0,3 detecta 9 malignas más: la exactitud no basta para decidir. Al bajar el umbral, cada maligna recuperada cuesta entre 1 y 1,5 falsos positivos. El umbral elegido es muy bajo (0,045) porque el modelo sobreajustado produce puntuaciones extremas, cercanas a 0 o a 1; por eso la puntuación no debe leerse como una probabilidad.
+: Tabla 4. Efecto del umbral en la ResNet18 con aumento (validación).
 
-## 6. Evaluación final en prueba
+Los umbrales 0,5 y 0,3 producen la misma exactitud, pero el segundo detecta nueve lesiones malignas adicionales, lo que muestra que la exactitud no es un criterio adecuado para este problema. Cada lesión maligna recuperada al reducir el umbral implica entre uno y uno y medio falsos positivos adicionales. El valor seleccionado, 0,045, es bajo porque el modelo sobreajustado produce puntuaciones muy próximas a 0 o a 1; por ello la puntuación no debe interpretarse como una probabilidad.
 
-Modelo `resnet18_base`, umbral 0,045 fijado en validación. Prueba: 273 lesiones (115 malignas, 158 benignas), usada una sola vez.
+## 6. Evaluación en el conjunto de prueba
 
-| Métrica | Validación | **Prueba** |
+El modelo final se evaluó una sola vez sobre las 273 lesiones de prueba (115 malignas y 158 benignas), con el umbral fijado en validación.
+
+| Métrica | Validación | Prueba |
 |---|---|---|
-| ROC-AUC | 0,836 | **0,821** |
-| Sensibilidad | 0,908 | **0,896** |
-| Especificidad | 0,512 | **0,500** |
-| Precisión | 0,639 | **0,566** |
-| F1 | 0,750 | **0,694** |
-| Exactitud | 0,705 | **0,667** |
-| TN / FP / FN / TP | 64 / 61 / 11 / 108 | **79 / 79 / 12 / 103** |
+| ROC-AUC | 0,836 | 0,821 |
+| Sensibilidad | 0,908 | 0,896 |
+| Especificidad | 0,512 | 0,500 |
+| Precisión | 0,639 | 0,566 |
+| F1 | 0,750 | 0,694 |
+| Exactitud | 0,705 | 0,667 |
+| VN / FP / FN / VP | 64 / 61 / 11 / 108 | 79 / 79 / 12 / 103 |
 
-![Matriz de confusión y curva ROC en prueba](runs/resnet18_base/confusion_test.png){width=40%} ![](runs/resnet18_base/roc_test.png){width=40%}
+: Tabla 5. Desempeño del modelo final.
 
-El resultado en prueba es muy cercano al de validación: el AUC baja 0,015 y la sensibilidad 0,012. Esto indica que el umbral elegido en validación se sostiene en datos nuevos y que no hubo fuga de información. La precisión baja más (0,639 → 0,566) porque la prueba tiene menos malignas: con la misma especificidad, una menor prevalencia hace que una mayor fracción de las alertas sean falsas. En términos prácticos, el modelo detecta 103 de 115 malignas, pero marca como sospechosas 79 de 158 benignas.
+![Figura 2. Matriz de confusión y curva ROC en el conjunto de prueba.](informe/figuras/confusion_roc_test.png){width=86%}
+
+Los resultados de prueba son consistentes con los de validación: el AUC disminuye 0,015 y la sensibilidad 0,012. Esta coherencia indica que el umbral se mantiene en datos no vistos y que no se produjo fuga de información entre particiones. La precisión desciende en mayor medida porque la prueba tiene una prevalencia de lesiones malignas más baja; con la misma especificidad, una fracción mayor de las alertas corresponde a falsos positivos. En términos absolutos, el modelo identifica 103 de las 115 lesiones malignas y señala como sospechosas 79 de las 158 benignas.
 
 ## 7. Análisis de errores
 
-**Falsos negativos en prueba (12).** Todos tienen puntuaciones menores que 0,039, y cinco están por debajo de 0,002. El modelo no está dudando con estas lesiones: las considera claramente benignas. Por eso bajar un poco el umbral no las recuperaría sin disparar los falsos positivos. Se reparten por igual entre vistas (6 CC y 6 MLO), con 8 del lado derecho y 4 del izquierdo, y pertenecen a 12 pacientes distintas, así que no hay un patrón por paciente. En validación se observó lo mismo: 11 falsos negativos con puntuaciones entre 0,00 y 0,03.
+Los doce falsos negativos de prueba recibieron puntuaciones inferiores a 0,039, y cinco de ellas fueron menores que 0,002. El modelo, por lo tanto, no presenta incertidumbre frente a estos casos, sino que los considera claramente benignos; una reducción moderada del umbral no permitiría recuperarlos sin aumentar de forma considerable los falsos positivos. Los errores se reparten por igual entre proyecciones (seis CC y seis MLO), con ocho lesiones del lado derecho y cuatro del izquierdo, y corresponden a doce pacientes distintas. En validación se observó el mismo comportamiento, con once falsos negativos de puntuación inferior a 0,03.
 
-![Falsos negativos en prueba](runs/resnet18_base/fn_grid_test.png){width=80%}
+![Figura 3. Falsos negativos del conjunto de prueba con su puntuación.](informe/figuras/fn_grid_test.png){width=88%}
 
-Al revisar las imágenes aparecen dos grupos. En unos seis casos (por ejemplo P_01155, P_00969, P_01654, P_01814 y P_00149) el recorte es sobre todo tejido denso y la masa apenas se distingue del tejido que la rodea. En otros tres (P_00605, P_00146 y P_01039) la masa es redondeada y de bordes relativamente lisos, un aspecto que suele asociarse a lesiones benignas; es plausible que el modelo haya aprendido ese patrón y por eso las descarte con tanta seguridad. Con 12 casos esto es una hipótesis, no una conclusión: confirmarla requeriría más datos o la opinión de un especialista.
+La inspección visual sugiere dos grupos. En cerca de la mitad de los casos el recorte está dominado por tejido denso y la masa apenas se diferencia de su entorno. En otros tres (P_00605, P_00146 y P_01039) la masa es redondeada y de bordes relativamente definidos, un aspecto que suele asociarse a lesiones benignas, lo que podría explicar la seguridad con que el modelo las descarta. Con doce casos, esta interpretación es una hipótesis que requeriría más datos o la valoración de un especialista.
 
-**Falsos positivos (79).** Son el costo de priorizar la sensibilidad. Con el umbral de 0,5 serían muchos menos, pero se perderían alrededor de un tercio de las malignas, que es justamente el error que se quiso evitar.
+Los 79 falsos positivos constituyen el costo de priorizar la sensibilidad. Con un umbral de 0,5 su número sería considerablemente menor, pero se perdería cerca de un tercio de las lesiones malignas.
 
-## 8. Verificación de hipótesis
+## 8. Contraste de hipótesis
 
-Las hipótesis H1 y H2 se plantearon antes de entrenar y se reformularon el 19/11/2026 con criterios medibles, ya con los resultados conocidos (la versión original está en el historial de Git). H3 se escribió antes del experimento sin aumento.
+Las hipótesis H1 y H2 se formularon antes del entrenamiento y se reformularon el 19 de noviembre con criterios cuantitativos, cuando los resultados ya eran conocidos; la versión original se conserva en el historial del repositorio. La hipótesis H3 se planteó antes del experimento sin aumento de datos.
 
-| Hipótesis | Criterio | Resultado | ¿Se cumple? |
+| Hipótesis | Criterio | Resultado | Conclusión |
 |---|---|---|---|
-| H1: ResNet18 preentrenada supera a la CNN pequeña | Diferencia de val_AUC > 0,05 (mayor que la oscilación de ±0,03 entre épocas) | 0,836 frente a 0,634 | Sí |
-| H2: con umbral 0,5 la sensibilidad es menor que la especificidad, y llegar a 0,90 cuesta especificidad | Sensibilidad y especificidad con 0,5 y con el umbral elegido | 0,689 / 0,792 → 0,908 / 0,512 | Sí |
-| H3: sin aumento hay más sobreajuste y menor AUC | val_loss y val_AUC | Más sobreajuste (val_loss máx. 1,14 frente a 0,85), mismo AUC (0,837 frente a 0,836) | Parcialmente |
+| H1. La ResNet18 preentrenada supera a la red pequeña | Diferencia de AUC mayor que 0,05 | 0,836 frente a 0,634 | Se cumple |
+| H2. Con umbral 0,5 la sensibilidad es menor que la especificidad, y alcanzar 0,90 reduce la especificidad | Sensibilidad y especificidad con ambos umbrales | 0,689 y 0,792; luego 0,908 y 0,512 | Se cumple |
+| H3. Sin aumento de datos aumenta el sobreajuste y disminuye el AUC | Pérdida y AUC de validación | Mayor sobreajuste (1,14 frente a 0,85); AUC similar (0,837 frente a 0,836) | Se cumple parcialmente |
 
-H3 se cumplió solo en parte: quitar el aumento sí aumentó el sobreajuste, pero no empeoró la capacidad de ordenar lesiones (AUC). El aumento, por tanto, no mejoró el AUC en este caso, aunque sí estabilizó el entrenamiento. Al ser una sola corrida con una semilla, se toma como indicio y no como resultado general.
+: Tabla 6. Resultado de las hipótesis.
+
+El resultado de H3 indica que, en este caso, el aumento de datos estabilizó el entrenamiento sin mejorar la capacidad de ordenar las lesiones. Al tratarse de una única ejecución con una sola semilla, se considera un indicio y no un resultado general.
 
 ## 9. Interfaz
 
-`app.py` ofrece una interfaz web con Gradio (`python app.py --run resnet18_base`). Recibe el recorte de una lesión (PNG, JPG, BMP o WEBP) y aplica el mismo preprocesamiento que en el entrenamiento. Muestra la clase predicha, la puntuación del modelo y el umbral, el aviso de que la puntuación no es una probabilidad clínica y el descargo de responsabilidad. Rechaza imágenes vacías o menores de 32 × 32 píxeles. Se probó con imágenes de validación: una maligna (puntuación 0,206, clasificada como maligna), una benigna (0,036, benigna) y una imagen vacía (rechazada). La evidencia está en `runs/resnet18_base/prueba_interfaz.md`.
+Se implementó una interfaz web con Gradio que recibe el recorte de una lesión en formato PNG, JPG, BMP o WEBP, aplica el mismo preprocesamiento del entrenamiento y muestra la clase asignada, la puntuación del modelo, el umbral y un aviso sobre el carácter no clínico de la herramienta. Las imágenes vacías o menores de 32 × 32 píxeles se rechazan. En la verificación con imágenes de validación, una lesión maligna (puntuación 0,206) y una benigna (0,036) se clasificaron correctamente, y una imagen vacía fue rechazada.
 
 ## 10. Limitaciones y consideraciones éticas
 
-- **Datos:** solo masas (no calcificaciones), un único conjunto de origen (película digitalizada de los años noventa) y un subconjunto de él. Los resultados no tienen por qué generalizar a otras instituciones, equipos o mamografía digital actual.
-- **Alcance:** el modelo clasifica recortes ya localizados por un radiólogo; no detecta lesiones en la mamografía completa.
-- **Variabilidad:** una sola semilla y un solo entrenamiento por configuración; el AUC oscila ±0,03 entre épocas y la validación tiene solo 244 lesiones.
-- **Falsos positivos:** con especificidad 0,50, la mitad de las benignas se marcan como sospechosas.
-- **Calibración:** la puntuación no es una probabilidad calibrada; el umbral de 0,045 refleja puntuaciones extremas de un modelo sobreajustado.
-- **Etiquetas:** agrupar `BENIGN_WITHOUT_CALLBACK` con `BENIGN` simplifica la realidad clínica.
-- **Uso:** es un prototipo educativo sin validación clínica. No debe usarse para tomar decisiones sobre pacientes.
+Los resultados se obtuvieron con un único conjunto de datos, compuesto por mamografías de película digitalizadas, y solo con masas; no es posible asumir que se generalicen a otras instituciones, equipos o a la mamografía digital actual. El modelo clasifica recortes ya localizados y no realiza detección. Cada configuración se entrenó una sola vez con una semilla, y el conjunto de validación incluye 244 lesiones, por lo que las métricas tienen una incertidumbre apreciable. La especificidad de 0,50 implica que la mitad de las lesiones benignas se clasifican como sospechosas. Las puntuaciones no están calibradas y no representan probabilidades. Finalmente, la agrupación de las categorías benignas simplifica la realidad clínica. Por todo lo anterior, el sistema es un prototipo educativo y no debe usarse en la atención de pacientes.
 
 ## 11. Reproducibilidad
 
-- Semilla 42 para particiones y entrenamiento; la configuración de cada corrida está en `runs/<corrida>/config.json`.
-- Entorno de la evaluación final: Python 3.13.16, torch 2.14.1+cu130, torchvision 0.29.1+cu130, GPU Tesla T4 (Google Colab). Versiones exactas en `requirements-lock.txt` y `entorno.json`.
-- Entrenamiento del modelo final: 15 épocas en 167,7 s.
-- Flujo: `prepare_data.py` → `check_split.py` → `train.py` → `evaluate.py` → `app.py`, descrito en el `README.md`. Las decisiones y dificultades de cada día están en `bitacora.md`, y el uso de herramientas de IA en `registro_ia.md`.
+Las particiones y los entrenamientos usan la semilla 42, y la configuración de cada ejecución se guarda en `runs/<ejecución>/config.json`. La evaluación final se realizó en Google Colab con Python 3.13.16, PyTorch 2.14.1, torchvision 0.29.1 y una GPU Tesla T4; las versiones exactas se encuentran en `requirements-lock.txt` y `entorno.json`. El entrenamiento del modelo final requirió 167,7 segundos. El flujo completo y los comandos se describen en el archivo `README.md`, las decisiones del proceso en `bitacora.md` y el uso de herramientas de inteligencia artificial en `registro_ia.md`.
 
 ## 12. Conclusiones
 
-La transferencia de aprendizaje fue la decisión con mayor impacto: con poco más de mil lesiones, una CNN entrenada desde cero no aprendió (AUC 0,634), mientras que una ResNet18 preentrenada alcanzó 0,836 en validación y 0,821 en prueba. La partición por paciente y la elección del umbral exclusivamente en validación hicieron que el resultado de prueba fuera coherente con el de validación, lo que da confianza en que las cifras no están infladas. Priorizar la sensibilidad permitió detectar cerca del 90 % de las masas malignas, a costa de una especificidad de 0,50, que es la principal debilidad del modelo. Como trabajo futuro se propone usar más datos (incluidas calcificaciones), repetir los entrenamientos con varias semillas, calibrar las puntuaciones y validar el modelo con datos de otra institución.
+La transferencia de aprendizaje fue el factor de mayor impacto: con poco más de mil lesiones de entrenamiento, la red entrenada desde cero no logró aprender, mientras que la ResNet18 preentrenada alcanzó un AUC de 0,836 en validación y de 0,821 en prueba. La partición por paciente y la selección del umbral exclusivamente en validación produjeron resultados de prueba coherentes con los de validación. La prioridad dada a la sensibilidad permitió detectar cerca del 90 % de las masas malignas, a cambio de una especificidad de 0,50, que constituye la principal debilidad del modelo. Como trabajo futuro se propone incorporar más datos, incluidas las calcificaciones, repetir los entrenamientos con distintas semillas, calibrar las puntuaciones y validar el modelo con datos de otra institución.
 
 ## Referencias
 
-- Lee, R. S., Gimenez, F., Hoogi, A., y Rubin, D. (2016). *Curated Breast Imaging Subset of DDSM* [Conjunto de datos]. The Cancer Imaging Archive. https://doi.org/10.7937/K9/TCIA.2016.7O02S9CY
-- Lee, R. S., Gimenez, F., Hoogi, A., Miyake, K. K., Gorovoy, M., y Rubin, D. L. (2017). A curated mammography data set for use in computer-aided detection and diagnosis research. *Scientific Data*, 4, 170177.
-- Clark, K., Vendt, B., Smith, K., et al. (2013). The Cancer Imaging Archive (TCIA): Maintaining and operating a public information repository. *Journal of Digital Imaging*, 26(6), 1045–1057.
-- He, K., Zhang, X., Ren, S., y Sun, J. (2016). Deep residual learning for image recognition. *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)*, 770–778.
+Clark, K., Vendt, B., Smith, K., Freymann, J., Kirby, J., Koppel, P., Moore, S., Phillips, S., Maffitt, D., Pringle, M., Tarbox, L. y Prior, F. (2013). The Cancer Imaging Archive (TCIA): Maintaining and operating a public information repository. *Journal of Digital Imaging, 26*(6), 1045–1057.
+
+He, K., Zhang, X., Ren, S. y Sun, J. (2016). Deep residual learning for image recognition. En *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition* (pp. 770–778).
+
+Lee, R. S., Gimenez, F., Hoogi, A. y Rubin, D. (2016). *Curated Breast Imaging Subset of DDSM* [Conjunto de datos]. The Cancer Imaging Archive. https://doi.org/10.7937/K9/TCIA.2016.7O02S9CY
+
+Lee, R. S., Gimenez, F., Hoogi, A., Miyake, K. K., Gorovoy, M. y Rubin, D. L. (2017). A curated mammography data set for use in computer-aided detection and diagnosis research. *Scientific Data, 4*, 170177.

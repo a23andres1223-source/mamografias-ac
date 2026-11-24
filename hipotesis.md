@@ -11,8 +11,8 @@
 - Por eso priorizo la **sensibilidad** de la clase maligna, aceptando perder algo de especificidad.
 
 ## Hipótesis (reformuladas el 19/11/2026, con los resultados ya conocidos)
-1. **H1 (modelo):** Esperaba que ResNet18 preentrenada superara a la CNN pequeña en AUC de validación, porque con solo 1.174 lesiones de entrenamiento una red desde cero tiene poco material para aprender texturas y la preentrenada ya trae filtros útiles. Criterio: diferencia de más de 0,05, que es mayor que la oscilación de ±0,03 que veo entre épocas. La refutaría una diferencia menor. Resultado: 0,836 frente a 0,634, así que se cumple. Resultado: val_AUC 0,836 (ResNet18) frente a 0,634 (CNN pequeña).
-2. **H2 (umbral y sensibilidad):** Con el umbral 0,5 esperaba una sensibilidad menor que la especificidad. Para llegar a sensibilidad ≥ 0,90 tendría que bajar el umbral y perder especificidad. La refutaría llegar a 0,90 sin perderla. Resultado: con 0,5, sensibilidad 0,689 y especificidad 0,792; con 0,045, sensibilidad 0,908 y especificidad 0,512, así que se cumple. Resultado: con umbral 0,5 sensibilidad 0,689 y especificidad 0,792; con 0,045 sensibilidad 0,908 y especificidad 0,512.
+1. **H1 (modelo):** Esperaba que ResNet18 preentrenada superara a la CNN pequeña en AUC de validación, porque con solo 1.174 lesiones de entrenamiento una red desde cero tiene poco material para aprender texturas y la preentrenada ya trae filtros útiles. Criterio: diferencia de más de 0,05, que es mayor que la oscilación de ±0,03 que veo entre épocas. La refutaría una diferencia menor. Resultado: 0,836 frente a 0,634, así que se cumple.
+2. **H2 (umbral y sensibilidad):** Con el umbral 0,5 esperaba una sensibilidad menor que la especificidad. Para llegar a sensibilidad ≥ 0,90 tendría que bajar el umbral y perder especificidad. La refutaría llegar a 0,90 sin perderla. Resultado: con 0,5, sensibilidad 0,689 y especificidad 0,792; con 0,045, sensibilidad 0,908 y especificidad 0,512, así que se cumple.
 
 ## Limitaciones
 - Uso solo masas y un subconjunto de CBIS-DDSM, con pocos pacientes y un único origen de datos, por lo que los resultados pueden no generalizar.

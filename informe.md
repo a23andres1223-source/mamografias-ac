@@ -155,7 +155,7 @@ Los resultados se obtuvieron con un único conjunto de datos, compuesto por mamo
 
 ## 11. Reproducibilidad
 
-Las particiones y los entrenamientos usan la semilla 42, y la configuración de cada ejecución se guarda en `runs/<ejecución>/config.json`. La evaluación final se realizó en Google Colab con Python 3.13.16, PyTorch 2.14.1, torchvision 0.29.1 y una GPU Tesla T4; las versiones exactas se encuentran en `requirements-lock.txt` y `entorno.json`. El entrenamiento del modelo final requirió 167,7 segundos. El código, el modelo final entrenado (`runs/resnet18_base/best.pt`) y los resultados de todas las ejecuciones están disponibles en el repositorio https://github.com/a23andres1223-source/mamografias-ac. La demostración en línea se encuentra en https://andres1223-mamografias.static.hf.space. El flujo completo y los comandos se describen en el archivo `README.md`, las decisiones del proceso en `bitacora.md` y el uso de herramientas de inteligencia artificial en `registro_ia.md`.
+Las particiones y los entrenamientos usan la semilla 42, y la configuración de cada ejecución se guarda en `runs/<ejecución>/config.json`. La evaluación final se realizó en Google Colab con Python 3.13.16, PyTorch 2.14.1, torchvision 0.29.1 y una GPU Tesla T4; las versiones exactas se encuentran en `requirements-lock.txt` y `entorno.json`. El entrenamiento del modelo final requirió 167,7 segundos. El código, el modelo final entrenado (`runs/resnet18_base/best.pt`) y los resultados de todas las ejecuciones están disponibles en el repositorio <https://github.com/a23andres1223-source/mamografias-ac>. La demostración en línea se encuentra en <https://andres1223-mamografias.static.hf.space>. El flujo completo y los comandos se describen en el archivo `README.md`, las decisiones del proceso en `bitacora.md` y el uso de herramientas de inteligencia artificial en `registro_ia.md`.
 
 ## 12. Conclusiones
 
@@ -167,15 +167,15 @@ Clark, K., Vendt, B., Smith, K., Freymann, J., Kirby, J., Koppel, P., Moore, S.,
 
 He, K., Zhang, X., Ren, S. y Sun, J. (2016). Deep residual learning for image recognition. En *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition* (pp. 770–778).
 
-Lee, R. S., Gimenez, F., Hoogi, A. y Rubin, D. (2016). *Curated Breast Imaging Subset of DDSM* [Conjunto de datos]. The Cancer Imaging Archive. https://doi.org/10.7937/K9/TCIA.2016.7O02S9CY
+Lee, R. S., Gimenez, F., Hoogi, A. y Rubin, D. (2016). *Curated Breast Imaging Subset of DDSM* [Conjunto de datos]. The Cancer Imaging Archive. <https://doi.org/10.7937/K9/TCIA.2016.7O02S9CY>
 
 Lee, R. S., Gimenez, F., Hoogi, A., Miyake, K. K., Gorovoy, M. y Rubin, D. L. (2017). A curated mammography data set for use in computer-aided detection and diagnosis research. *Scientific Data, 4*, 170177.
 
 ## Anexo A. Ejecución del prototipo {#anexo}
 
-**Demostración en línea, sin instalar nada.** El prototipo está publicado en https://andres1223-mamografias.static.hf.space (página del proyecto en Hugging Face: https://huggingface.co/spaces/Andres1223/mamografias). Basta con abrir el enlace, esperar a que cargue el modelo (45 MB) y hacer clic en uno de los ejemplos o subir un recorte. La página ejecuta el modelo final, convertido a formato ONNX, dentro del navegador mediante ONNX Runtime Web, con el mismo preprocesamiento de la interfaz Gradio; la imagen no se envía a ningún servidor.
+**Demostración en línea, sin instalar nada.** El prototipo está publicado en <https://andres1223-mamografias.static.hf.space> (página del proyecto en Hugging Face: <https://huggingface.co/spaces/Andres1223/mamografias>). Basta con abrir el enlace, esperar a que cargue el modelo (45 MB) y hacer clic en uno de los ejemplos o subir un recorte. La página ejecuta el modelo final, convertido a formato ONNX, dentro del navegador mediante ONNX Runtime Web, con el mismo preprocesamiento de la interfaz Gradio; la imagen no se envía a ningún servidor.
 
-**Más imágenes para probar.** Los 1.691 recortes en PNG están disponibles en una carpeta de Google Drive de solo lectura: https://drive.google.com/drive/folders/1aVHj3Scb4ZAW-S-Llsub6KrvAp352mh3. Cada archivo se nombra con el identificador de la lesión (por ejemplo, `P_00009_RIGHT_CC_mass_1.png`). Si se conserva ese nombre, la página en línea muestra junto al resultado la patología real y la partición a la que pertenece la lesión, tomadas de `web/etiquetas.csv`. Las lesiones de la partición de prueba ya se usaron en la evaluación final.
+**Más imágenes para probar.** Los 1.691 recortes en PNG están disponibles en una carpeta de Google Drive de solo lectura: <https://drive.google.com/drive/folders/1aVHj3Scb4ZAW-S-Llsub6KrvAp352mh3>. Cada archivo se nombra con el identificador de la lesión (por ejemplo, `P_00009_RIGHT_CC_mass_1.png`). Si se conserva ese nombre, la página en línea muestra junto al resultado la patología real y la partición a la que pertenece la lesión, tomadas de `web/etiquetas.csv`. Las lesiones de la partición de prueba ya se usaron en la evaluación final.
 
 **Interfaz Gradio en un computador propio** (Windows, macOS o Linux; requiere Python 3.10 a 3.13 y Git). El repositorio incluye el modelo final y tres recortes de validación en `ejemplos/`, por lo que no se necesita GPU ni descargar el conjunto de datos. En una terminal:
 

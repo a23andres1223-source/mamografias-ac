@@ -18,7 +18,14 @@
   .autores { color: var(--gris-oscuro); font-size: 14px; }
   .aviso { margin: 20px 32px 0; padding: 10px 14px; background: var(--fondo); border-left: 3px solid var(--negro); font-size: 14px; }
   main { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; padding: 24px 32px 8px; }
-  @media (max-width: 820px) { main { grid-template-columns: 1fr; } }
+  @media (max-width: 820px) {
+    main { grid-template-columns: 1fr; padding: 18px 18px 4px; }
+    header { padding: 20px 18px 14px; border-left-width: 6px; }
+    h1 { font-size: 21px; }
+    .aviso { margin: 16px 18px 0; }
+    footer { padding: 16px 18px 24px; }
+    #zona { min-height: 220px; }
+  }
   h2 { font-size: 15px; font-weight: 600; margin: 0 0 10px; padding-bottom: 4px; border-bottom: 1px solid var(--negro); }
   #zona { border: 1.5px dashed var(--gris); min-height: 300px; display: flex; align-items: center; justify-content: center; text-align: center; cursor: pointer; background: var(--fondo); color: var(--gris-oscuro); font-size: 14px; padding: 12px; }
   #zona.encima { border-color: var(--negro); }
@@ -27,9 +34,9 @@
   button { font-family: inherit; font-size: 14px; padding: 9px 18px; border: 1px solid var(--negro); background: var(--negro); color: #fff; cursor: pointer; }
   button.secundario { background: #fff; color: var(--negro); }
   button:disabled { background: var(--gris-claro); border-color: var(--gris-claro); color: var(--gris); cursor: default; }
-  .ejemplos { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
-  .ejemplo { width: 120px; cursor: pointer; font-size: 11.5px; color: var(--gris-oscuro); }
-  .ejemplo img { width: 120px; height: 120px; object-fit: cover; border: 1px solid var(--gris-claro); display: block; margin-bottom: 4px; }
+  .ejemplos { display: grid; grid-template-columns: repeat(3, minmax(0, 120px)); gap: 10px; margin-top: 14px; }
+  .ejemplo { cursor: pointer; font-size: 11.5px; color: var(--gris-oscuro); }
+  .ejemplo img { width: 100%; aspect-ratio: 1; object-fit: cover; border: 1px solid var(--gris-claro); display: block; margin-bottom: 4px; }
   .ejemplo:hover img { border-color: var(--negro); }
   #estado { font-size: 13px; color: var(--gris-oscuro); margin-bottom: 12px; }
   #resultado { display: none; }
@@ -62,18 +69,18 @@ Clasifica recortes de masas ya localizadas (no detecta lesiones). La puntuación
 <main>
   <section>
     <h2>1. Recorte de la lesión</h2>
-    <div id="zona" tabindex="0">Haga clic aquí o arrastre un recorte (PNG, JPG, BMP o WEBP)</div>
+    <div id="zona" tabindex="0">Haga clic o toque aquí para elegir un recorte, o arrástrelo (PNG, JPG, BMP o WEBP)</div>
     <input type="file" id="archivo" accept="image/png,image/jpeg,image/bmp,image/webp" hidden>
     <div class="botones">
       <button id="clasificar" disabled>Clasificar</button>
       <button id="limpiar" class="secundario">Limpiar</button>
     </div>
+    <div id="estado">Cargando el modelo (45 MB)…</div>
     <div class="ejemplos" id="ejemplos"></div>
   </section>
 
   <section>
     <h2>2. Resultado del modelo</h2>
-    <div id="estado">Cargando el modelo (45 MB)…</div>
     <div id="resultado">
       <div class="clase" id="clase"></div>
       <div class="detalle" id="detalle"></div>
@@ -232,6 +239,7 @@ async function clasificar() {
     $("etq-umbral").textContent = "umbral " + coma(UMBRAL);
     $("resultado").style.display = "block";
     $("estado").textContent = "";
+    if (window.innerWidth <= 820) $("resultado").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (e) {
     $("resultado").style.display = "none";
     $("estado").innerHTML = `<span class="error">${e.message || "No se pudo procesar la imagen."}</span>`;
@@ -262,7 +270,7 @@ $("zona").ondrop = (e) => { e.preventDefault(); $("zona").classList.remove("enci
 $("clasificar").onclick = clasificar;
 $("limpiar").onclick = () => {
   imagenActual = null; $("archivo").value = "";
-  $("zona").textContent = "Haga clic aquí o arrastre un recorte (PNG, JPG, BMP o WEBP)";
+  $("zona").textContent = "Haga clic o toque aquí para elegir un recorte, o arrástrelo (PNG, JPG, BMP o WEBP)";
   $("resultado").style.display = "none"; $("clasificar").disabled = true;
   $("estado").textContent = sesion ? "" : $("estado").textContent;
 };
@@ -281,16 +289,53 @@ fetch("etiquetas.csv").then((r) => r.ok ? r.text() : "").then((t) => {
   }
 }).catch(() => {});
 
+// Descarga del modelo con progreso, reintentos y caché del navegador (las visitas siguientes no lo descargan otra vez).
+const MODELO = "modelo.onnx", CACHE = "mamografias-modelo-v1";
+
+async function descargar(intento) {
+  const r = await fetch(MODELO, { cache: "no-store" });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const total = Number(r.headers.get("content-length")) || 44700652;
+  const lector = r.body.getReader(), partes = []; let n = 0;
+  for (;;) {
+    const { done, value } = await lector.read();
+    if (done) break;
+    partes.push(value); n += value.length;
+    $("estado").textContent = `Descargando el modelo: ${Math.round(n / 1e6)} de ${Math.round(total / 1e6)} MB` + (intento > 1 ? ` (intento ${intento})` : "") + "…";
+  }
+  const buf = new Uint8Array(n); let o = 0;
+  for (const p of partes) { buf.set(p, o); o += p.length; }
+  return buf;
+}
+
+async function obtenerModelo() {
+  try {
+    const c = await caches.open(CACHE), guardado = await c.match(MODELO);
+    if (guardado) return new Uint8Array(await guardado.arrayBuffer());
+  } catch (e) { /* sin caché disponible: se descarga */ }
+  let error;
+  for (let intento = 1; intento <= 4; intento++) {
+    try {
+      const buf = await descargar(intento);
+      try { await (await caches.open(CACHE)).put(MODELO, new Response(buf)); } catch (e) { /* opcional */ }
+      return buf;
+    } catch (e) { error = e; await new Promise((ok) => setTimeout(ok, 1500 * intento)); }
+  }
+  throw error;
+}
+
 (async () => {
+  $("clasificar").textContent = "Cargando modelo…";
   try {
     ort.env.wasm.numThreads = 1;
-    sesion = await ort.InferenceSession.create("modelo.onnx", { executionProviders: ["wasm"] });
-    $("estado").textContent = "Modelo listo. Cargue una imagen o haga clic en un ejemplo.";
+    sesion = await ort.InferenceSession.create(await obtenerModelo(), { executionProviders: ["wasm"] });
+    $("estado").textContent = imagenActual ? "Imagen cargada. Pulse Clasificar." : "Modelo listo. Cargue una imagen o toque un ejemplo.";
     if (imagenActual) $("clasificar").disabled = false;
   } catch (e) {
-    $("estado").innerHTML = '<span class="error">No se pudo cargar el modelo. Recargue la página.</span>';
+    $("estado").innerHTML = '<span class="error">No se pudo descargar el modelo. Revise la conexión y recargue la página.</span>';
     console.error(e);
   }
+  $("clasificar").textContent = "Clasificar";
 })();
 </script>
 </body>

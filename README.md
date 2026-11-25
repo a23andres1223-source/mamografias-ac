@@ -4,7 +4,7 @@
 > Clasifica recortes de masas con patología conocida. No detecta lesiones ni diagnostica pacientes.
 
 Proyecto final de Aprendizaje Computacional – Ingeniería de Sistemas, Universidad de Córdoba.
-**Integrantes:** Andrés Alfonso Burgos Agámez y Carmelo de Jesús Quiceno Páez. Informe: [`informe.md`](informe.md).
+**Integrantes:** Andrés Alfonso Burgos Agámez y Carmelo de Jesús Quiceno Páez. Informe: [`informe.pdf`](informe.pdf) (fuente: [`informe.md`](informe.md)).
 
 ## Demostración en línea
 

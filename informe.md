@@ -146,7 +146,7 @@ El resultado de H3 indica que, en este caso, el aumento de datos estabilizó el 
 
 ## 9. Interfaz
 
-Se implementó una interfaz web con Gradio que recibe el recorte de una lesión en formato PNG, JPG, BMP o WEBP, aplica el mismo preprocesamiento del entrenamiento y muestra la clase asignada, la puntuación del modelo, el umbral y un aviso sobre el carácter no clínico de la herramienta. Las imágenes vacías o menores de 32 × 32 píxeles se rechazan. En la verificación con imágenes de validación, una lesión maligna (puntuación 0,206) y una benigna (0,036) se clasificaron correctamente, y una imagen vacía fue rechazada.
+Se implementó una interfaz web con Gradio que recibe el recorte de una lesión en formato PNG, JPG, BMP o WEBP, aplica el mismo preprocesamiento del entrenamiento y muestra la clase asignada, la puntuación del modelo, el umbral y un aviso sobre el carácter no clínico de la herramienta. Las imágenes vacías o menores de 32 × 32 píxeles se rechazan. En la verificación con imágenes de validación, una lesión maligna (puntuación 0,206) y una benigna (0,036) se clasificaron correctamente, y una imagen vacía fue rechazada. La interfaz incluye estos dos recortes y uno de los falsos negativos como ejemplos que se cargan con un clic y puede ejecutarse sin GPU; el procedimiento se describe en el Anexo A.
 
 ## 10. Limitaciones y consideraciones éticas
 
@@ -154,7 +154,7 @@ Los resultados se obtuvieron con un único conjunto de datos, compuesto por mamo
 
 ## 11. Reproducibilidad
 
-Las particiones y los entrenamientos usan la semilla 42, y la configuración de cada ejecución se guarda en `runs/<ejecución>/config.json`. La evaluación final se realizó en Google Colab con Python 3.13.16, PyTorch 2.14.1, torchvision 0.29.1 y una GPU Tesla T4; las versiones exactas se encuentran en `requirements-lock.txt` y `entorno.json`. El entrenamiento del modelo final requirió 167,7 segundos. El flujo completo y los comandos se describen en el archivo `README.md`, las decisiones del proceso en `bitacora.md` y el uso de herramientas de inteligencia artificial en `registro_ia.md`.
+Las particiones y los entrenamientos usan la semilla 42, y la configuración de cada ejecución se guarda en `runs/<ejecución>/config.json`. La evaluación final se realizó en Google Colab con Python 3.13.16, PyTorch 2.14.1, torchvision 0.29.1 y una GPU Tesla T4; las versiones exactas se encuentran en `requirements-lock.txt` y `entorno.json`. El entrenamiento del modelo final requirió 167,7 segundos. El código, el modelo final entrenado (`runs/resnet18_base/best.pt`) y los resultados de todas las ejecuciones están disponibles en el repositorio https://github.com/a23andres1223-source/mamografias-ac. El flujo completo y los comandos se describen en el archivo `README.md`, las decisiones del proceso en `bitacora.md` y el uso de herramientas de inteligencia artificial en `registro_ia.md`.
 
 ## 12. Conclusiones
 
@@ -169,3 +169,43 @@ He, K., Zhang, X., Ren, S. y Sun, J. (2016). Deep residual learning for image re
 Lee, R. S., Gimenez, F., Hoogi, A. y Rubin, D. (2016). *Curated Breast Imaging Subset of DDSM* [Conjunto de datos]. The Cancer Imaging Archive. https://doi.org/10.7937/K9/TCIA.2016.7O02S9CY
 
 Lee, R. S., Gimenez, F., Hoogi, A., Miyake, K. K., Gorovoy, M. y Rubin, D. L. (2017). A curated mammography data set for use in computer-aided detection and diagnosis research. *Scientific Data, 4*, 170177.
+
+## Anexo A. Ejecución del prototipo {#anexo}
+
+El repositorio incluye el modelo final y tres recortes de validación en la carpeta `ejemplos/`, por lo que la interfaz puede ejecutarse sin descargar el conjunto de datos, sin volver a entrenar y sin GPU. La guía completa se encuentra en el archivo `GUIA_PROFESOR.md` del repositorio.
+
+**Opción 1. Computador propio** (Windows, macOS o Linux; requiere Python 3.10 a 3.13 y Git). En una terminal:
+
+```
+git clone https://github.com/a23andres1223-source/mamografias-ac.git
+cd mamografias-ac
+python -m venv .venv
+.venv\Scripts\activate          (macOS/Linux: source .venv/bin/activate)
+pip install -r requirements.txt
+python app.py
+```
+
+La interfaz se abre en el navegador en `http://127.0.0.1:7860`. La primera instalación tarda unos minutos porque descarga PyTorch.
+
+**Opción 2. Google Colab** (sin instalación). En una celda de un cuaderno nuevo:
+
+```
+!git clone https://github.com/a23andres1223-source/mamografias-ac.git
+%cd mamografias-ac
+!pip -q install gradio
+!python app.py --share
+```
+
+Tras unos 30 segundos aparece un enlace `https://….gradio.live` que abre la interfaz.
+
+**Uso.** Se hace clic en uno de los ejemplos o se sube un recorte (PNG, JPG, BMP o WEBP) y se pulsa *Clasificar*. La interfaz muestra la clase asignada, la puntuación del modelo y el umbral de 0,045. Los ejemplos ilustran un acierto benigno (puntuación 0,036), un acierto maligno (0,206) y un falso negativo (0,002), este último analizado en la sección 7.
+
+: Ejemplos incluidos en el repositorio
+
+| Archivo | Patología real | Resultado del modelo |
+|---|---|---|
+| `benigna_P_00021_LEFT_CC_mass_1.png` | Benigna | Benigna (0,036) |
+| `maligna_P_00009_RIGHT_CC_mass_1.png` | Maligna | Maligna (0,206) |
+| `maligna_falso_negativo_P_01744_LEFT_MLO_mass_1.png` | Maligna | Benigna (0,002) |
+
+Las métricas, curvas, matrices de confusión y listados de errores de cada modelo están en `runs/<modelo>/`. Para repetir el entrenamiento se necesitan las imágenes de CBIS-DDSM; los pasos se describen en la sección «Cómo reproducir» del `README.md`.

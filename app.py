@@ -1,6 +1,6 @@
-"""Interfaz Gradio.   python app.py --run resnet18_base
+"""Interfaz Gradio.   python app.py   (por defecto usa el modelo final, runs/resnet18_base)
 
-Entrada esperada: recorte de una lesión (PNG/JPG/JPEG/BMP/WEBP), como los de data/processed/png/.
+Entrada esperada: recorte de una lesión (PNG/JPG/JPEG/BMP/WEBP), como los de ejemplos/ o data/processed/png/.
 """
 import argparse
 import json
@@ -17,6 +17,7 @@ from imaging import to_uint8
 
 DISCLAIMER = "⚠️ " + C.DISCLAIMER
 ALLOWED = "PNG, JPG, JPEG, BMP o WEBP (recorte de lesión en escala de grises o color). No se admite DICOM directo."
+EJEMPLOS = sorted((C.ROOT / "ejemplos").glob("*.png"))
 
 
 def build_app(run_name):
@@ -60,12 +61,14 @@ def build_app(run_name):
                 out_md = gr.Markdown()
                 out_lbl = gr.Label(label="Puntuación del modelo")
         gr.Button("Clasificar").click(predict, inp, [out_md, out_lbl])
+        if EJEMPLOS:
+            gr.Examples([[str(p)] for p in EJEMPLOS], inp, label="Ejemplos de validación (clic para cargar)")
     return demo
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--run", required=True)
+    ap.add_argument("--run", default="resnet18_base")
     ap.add_argument("--share", action="store_true")
     a = ap.parse_args()
-    build_app(a.run).launch(share=a.share)
+    build_app(a.run).launch(share=a.share, inbrowser=not a.share)

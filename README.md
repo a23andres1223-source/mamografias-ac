@@ -6,6 +6,19 @@
 Proyecto final de Aprendizaje Computacional – Ingeniería de Sistemas, Universidad de Córdoba.
 **Integrantes:** Andrés Alfonso Burgos y Carmelo de Jesús Quiceno Páez. Informe: [`informe.md`](informe.md).
 
+## Ejecutar la interfaz
+
+El repositorio incluye el modelo final (`runs/resnet18_base/best.pt`) y tres imágenes de ejemplo (`ejemplos/`); no se necesita GPU ni descargar datos:
+
+```bash
+git clone https://github.com/a23andres1223-source/mamografias-ac.git
+cd mamografias-ac
+pip install -r requirements.txt
+python app.py                    # abre http://127.0.0.1:7860
+```
+
+Instrucciones detalladas (entorno virtual, Google Colab y ejemplos): [`GUIA_PROFESOR.md`](GUIA_PROFESOR.md).
+
 ## Resultado final
 
 Modelo: **ResNet18 preentrenada en ImageNet, ajuste completo, con aumento de datos** (`runs/resnet18_base`).
@@ -22,7 +35,7 @@ Comparación en validación (sensibilidad 0,908 en los tres): CNN pequeña val_A
 
 CBIS-DDSM (TCIA, versión 1, CC BY 3.0), solo masas: 1.691 lesiones de 892 pacientes (911 benignas, 780 malignas).
 Partición **por paciente** (semilla 42): train 1.174, val 244, test 273; 0 pacientes compartidos.
-Las imágenes no están en el repositorio (`data/` está en `.gitignore`); los datos procesados y los pesos (`best.pt`) están respaldados en Google Drive (`Proyecto_Mamografias/trabajo/`).
+Las imágenes no están en el repositorio (`data/` está en `.gitignore`), salvo los tres ejemplos de `ejemplos/`. De los pesos, solo se incluye el del modelo final (`runs/resnet18_base/best.pt`); los datos procesados y los pesos de los demás modelos están respaldados en Google Drive (`Proyecto_Mamografias/trabajo/`).
 
 ## Estructura
 
@@ -34,9 +47,11 @@ Las imágenes no están en el repositorio (`data/` está en `.gitignore`); los d
 | `dataset.py`, `models.py`, `engine.py`, `metrics.py`, `imaging.py` | Piezas reutilizables |
 | `train.py` | Entrena (solo usa train y val) |
 | `evaluate.py` | Métricas, umbral, errores (FN/FP) |
-| `app.py` | Interfaz Gradio |
+| `app.py` | Interfaz Gradio (`python app.py`) |
 | `helpers.py` | Funciones para retomar sesiones de Colab (respaldo en Drive, bitácora, commits) |
 | `runs/` | Configuración, curvas, métricas, figuras y errores de cada corrida |
+| `ejemplos/` | Tres recortes de validación para probar la interfaz |
+| `GUIA_PROFESOR.md` | Cómo ejecutar la interfaz en un computador propio o en Colab |
 | `eda/`, `eda_conclusiones.md` | Análisis exploratorio |
 | `hipotesis.md`, `mapeo_etiquetas.md` | Problema, hipótesis y etiquetas |
 | `bitacora.md`, `registro_ia.md` | Bitácora de decisiones y registro de uso de IA |
@@ -68,7 +83,7 @@ En Google Colab (GPU T4) se usó el cuaderno `MamografiasProyecto.ipynb`; la sec
    python evaluate.py --run resnet18_base --split val --target-sensitivity 0.90
    python evaluate.py --run resnet18_base --split test
    ```
-5. Interfaz: `python app.py --run resnet18_base` (con `--share` genera un enlace temporal).
+5. Interfaz: `python app.py` (usa `runs/resnet18_base`; con `--share` genera un enlace temporal).
 
 ## Cambios en vivo
 

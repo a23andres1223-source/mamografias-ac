@@ -1,6 +1,6 @@
 # Bitácora de proceso
 
-Integrantes: Andrés Alfonso Burgos y Carmelo de Jesús Quiceno Páez. Una fila por decisión o dificultad relevante, con su evidencia (commit o archivo de `runs/`).
+Integrantes: Andrés Alfonso Burgos Agámez y Carmelo de Jesús Quiceno Páez. Una fila por decisión o dificultad relevante, con su evidencia (commit o archivo de `runs/`).
 
 | Fecha | Dificultad / situación | Alternativas consideradas | Decisión | Evidencia | Contribución individual |
 |---|---|---|---|---|---|

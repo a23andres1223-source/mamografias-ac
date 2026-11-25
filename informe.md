@@ -3,7 +3,7 @@ title: "Clasificación de masas mamográficas benignas y malignas mediante trans
 subtitle: "Estudio sobre el conjunto CBIS-DDSM"
 curso: "Aprendizaje Computacional · Proyecto final"
 author:
-  - Andrés Alfonso Burgos
+  - Andrés Alfonso Burgos Agámez
   - Carmelo de Jesús Quiceno Páez
 date: "Noviembre de 2026"
 repositorio: "github.com/a23andres1223-source/mamografias-ac"

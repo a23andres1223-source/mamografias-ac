@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clasificación de masas mamográficas · CBIS-DDSM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/ort.min.js"></script>
+<style>
+  :root { --negro: #111; --gris-oscuro: #444; --gris: #8c8c8c; --gris-claro: #d9d9d9; --fondo: #f5f5f5; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "IBM Plex Sans", Arial, sans-serif; color: var(--negro); background: #fff; line-height: 1.5; }
+  header { border-left: 10px solid var(--negro); padding: 28px 32px 18px; border-bottom: 1px solid var(--gris-claro); }
+  header p { margin: 0; }
+  .curso { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--gris); }
+  h1 { font-size: 26px; font-weight: 600; margin: 6px 0 4px; }
+  .autores { color: var(--gris-oscuro); font-size: 14px; }
+  .aviso { margin: 20px 32px 0; padding: 10px 14px; background: var(--fondo); border-left: 3px solid var(--negro); font-size: 14px; }
+  main { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; padding: 24px 32px 8px; }
+  @media (max-width: 820px) { main { grid-template-columns: 1fr; } }
+  h2 { font-size: 15px; font-weight: 600; margin: 0 0 10px; padding-bottom: 4px; border-bottom: 1px solid var(--negro); }
+  #zona { border: 1.5px dashed var(--gris); min-height: 300px; display: flex; align-items: center; justify-content: center; text-align: center; cursor: pointer; background: var(--fondo); color: var(--gris-oscuro); font-size: 14px; padding: 12px; }
+  #zona.encima { border-color: var(--negro); }
+  #zona img { max-width: 100%; max-height: 360px; }
+  .botones { display: flex; gap: 10px; margin-top: 12px; }
+  button { font-family: inherit; font-size: 14px; padding: 9px 18px; border: 1px solid var(--negro); background: var(--negro); color: #fff; cursor: pointer; }
+  button.secundario { background: #fff; color: var(--negro); }
+  button:disabled { background: var(--gris-claro); border-color: var(--gris-claro); color: var(--gris); cursor: default; }
+  .ejemplos { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  .ejemplo { width: 120px; cursor: pointer; font-size: 11.5px; color: var(--gris-oscuro); }
+  .ejemplo img { width: 120px; height: 120px; object-fit: cover; border: 1px solid var(--gris-claro); display: block; margin-bottom: 4px; }
+  .ejemplo:hover img { border-color: var(--negro); }
+  #estado { font-size: 13px; color: var(--gris-oscuro); margin-bottom: 12px; }
+  #resultado { display: none; }
+  .clase { font-size: 22px; font-weight: 600; margin: 4px 0 2px; }
+  .detalle { font-size: 14px; color: var(--gris-oscuro); }
+  .barra { position: relative; height: 14px; background: var(--fondo); border: 1px solid var(--gris-claro); margin: 14px 0 4px; }
+  .barra span { position: absolute; left: 0; top: 0; bottom: 0; background: var(--negro); }
+  .barra i { position: absolute; top: -5px; bottom: -5px; width: 2px; background: var(--gris); }
+  .escala { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--gris); }
+  .nota { font-size: 13px; color: var(--gris-oscuro); margin-top: 14px; }
+  .error { color: var(--negro); font-weight: 600; }
+  table { border-collapse: collapse; font-size: 13px; width: 100%; margin-top: 18px; }
+  th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--gris-claro); }
+  th { border-top: 1.5px solid var(--negro); border-bottom: 1px solid var(--negro); font-weight: 600; }
+  footer { padding: 18px 32px 28px; font-size: 13px; color: var(--gris-oscuro); border-top: 1px solid var(--gris-claro); margin-top: 20px; }
+  footer a { color: var(--negro); }
+  code { font-family: "IBM Plex Mono", monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <p class="curso">Universidad de Córdoba · Aprendizaje Computacional · Proyecto final</p>
+  <h1>Clasificación de masas mamográficas benignas y malignas</h1>
+  <p class="autores">Andrés Alfonso Burgos · Carmelo de Jesús Quiceno Páez</p>
+</header>
+
+<p class="aviso"><strong>Prototipo académico; no apto para diagnóstico ni decisiones clínicas.</strong>
+Clasifica recortes de masas ya localizadas (no detecta lesiones). La puntuación no es una probabilidad clínica calibrada.</p>
+
+<main>
+  <section>
+    <h2>1. Recorte de la lesión</h2>
+    <div id="zona" tabindex="0">Haga clic aquí o arrastre un recorte (PNG, JPG, BMP o WEBP)</div>
+    <input type="file" id="archivo" accept="image/png,image/jpeg,image/bmp,image/webp" hidden>
+    <div class="botones">
+      <button id="clasificar" disabled>Clasificar</button>
+      <button id="limpiar" class="secundario">Limpiar</button>
+    </div>
+    <div class="ejemplos" id="ejemplos"></div>
+  </section>
+
+  <section>
+    <h2>2. Resultado del modelo</h2>
+    <div id="estado">Cargando el modelo (45 MB)…</div>
+    <div id="resultado">
+      <div class="clase" id="clase"></div>
+      <div class="detalle" id="detalle"></div>
+      <div class="detalle" id="real"></div>
+      <div class="barra"><span id="relleno"></span><i id="marca"></i></div>
+      <div class="escala"><span>0</span><span id="etq-umbral"></span><span>1</span></div>
+    </div>
+    <p class="nota">Modelo: ResNet18 preentrenada en ImageNet, ajustada con 1.174 lesiones de CBIS-DDSM. Si la puntuación es mayor o igual que el umbral (0,045, elegido en validación para una sensibilidad de al menos 0,90), la lesión se clasifica como maligna.
+    En el conjunto de prueba: ROC-AUC 0,821, sensibilidad 0,896 y especificidad 0,500.</p>
+    <p class="nota">La imagen se procesa en este navegador; no se envía a ningún servidor.</p>
+    <table>
+      <thead><tr><th>Ejemplo (validación)</th><th>Patología real</th><th>Resultado esperado</th></tr></thead>
+      <tbody>
+        <tr><td>Benigna P_00021</td><td>Benigna</td><td>Benigna (0,036)</td></tr>
+        <tr><td>Maligna P_00009</td><td>Maligna</td><td>Maligna (0,206)</td></tr>
+        <tr><td>Maligna P_01744</td><td>Maligna</td><td>Benigna (0,002): falso negativo</td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+
+<footer>
+  Más recortes para probar: <a href="https://drive.google.com/drive/folders/1aVHj3Scb4ZAW-S-Llsub6KrvAp352mh3" target="_blank" rel="noopener">carpeta de imágenes PNG en Google Drive</a> (1.691 recortes de CBIS-DDSM).
+  Código, informe e interfaz Gradio: <a href="https://github.com/a23andres1223-source/mamografias-ac" target="_blank" rel="noopener">github.com/a23andres1223-source/mamografias-ac</a>.<br>
+  Datos: Curated Breast Imaging Subset of DDSM (Lee et al., 2016), The Cancer Imaging Archive, licencia CC BY 3.0.
+</footer>
+
+<script>
+// Mismo preprocesamiento que app.py: gris -> to_uint8 (percentiles 1-99) -> RGB -> PadToSquare
+// -> Resize 224x224 (bilineal con antialias, como PIL) -> ToTensor -> Normalize(ImageNet).
+const UMBRAL = 0.04496074840426445;
+const N = 224;
+const MEAN = [0.485, 0.456, 0.406], STD = [0.229, 0.224, 0.225];
+const EJEMPLOS = [
+  ["ejemplos/benigna_P_00021_LEFT_CC_mass_1.png", "Benigna"],
+  ["ejemplos/maligna_P_00009_RIGHT_CC_mass_1.png", "Maligna"],
+  ["ejemplos/maligna_falso_negativo_P_01744_LEFT_MLO_mass_1.png", "Maligna (falso negativo)"],
+];
+
+const $ = (id) => document.getElementById(id);
+let sesion = null, imagenActual = null, nombreActual = null;
+const ETIQUETAS = {};  // lesion_id -> [patología, partición], desde etiquetas.csv
+const PARTICION = { train: "entrenamiento", val: "validación", test: "prueba" };
+const coma = (x, d = 3) => x.toFixed(d).replace(".", ",");
+
+function percentil(ordenados, p) {
+  const idx = (p / 100) * (ordenados.length - 1);
+  const lo = Math.floor(idx), hi = Math.ceil(idx);
+  return ordenados[lo] + (ordenados[hi] - ordenados[lo]) * (idx - lo);
+}
+
+function aUint8(gris) {
+  const ord = Float32Array.from(gris).sort();
+  let lo = percentil(ord, 1), hi = percentil(ord, 99);
+  if (hi <= lo) { lo = ord[0]; hi = ord[ord.length - 1]; }
+  const out = new Uint8Array(gris.length);
+  if (hi <= lo) return out;
+  for (let i = 0; i < gris.length; i++) {
+    const a = Math.min(1, Math.max(0, (gris[i] - lo) / (hi - lo)));
+    out[i] = Math.floor(a * 255);
+  }
+  return out;
+}
+
+// Coeficientes del filtro bilineal de PIL (Pillow, Resample.c), en punto fijo de 22 bits.
+function coeficientes(entrada, salida) {
+  const escala = entrada / salida, fescala = Math.max(escala, 1), soporte = fescala, ss = 1 / fescala;
+  const res = [];
+  for (let xx = 0; xx < salida; xx++) {
+    const centro = (xx + 0.5) * escala;
+    let xmin = Math.trunc(centro - soporte + 0.5); if (xmin < 0) xmin = 0;
+    let xmax = Math.trunc(centro + soporte + 0.5); if (xmax > entrada) xmax = entrada;
+    xmax -= xmin;
+    const k = new Float64Array(xmax); let ww = 0;
+    for (let x = 0; x < xmax; x++) {
+      const t = Math.abs((x + xmin - centro + 0.5) * ss);
+      k[x] = t < 1 ? 1 - t : 0; ww += k[x];
+    }
+    const kk = new Float64Array(xmax);
+    for (let x = 0; x < xmax; x++) {
+      const v = ww !== 0 ? k[x] / ww : 0;
+      kk[x] = v < 0 ? Math.trunc(-0.5 + v * 4194304) : Math.trunc(0.5 + v * 4194304);
+    }
+    res.push([xmin, kk]);
+  }
+  return res;
+}
+
+const recortar8 = (s) => Math.min(255, Math.max(0, Math.floor(s / 4194304)));
+
+function redimensionar(src, w, h, W, H) {
+  const ch = coeficientes(w, W), cv = coeficientes(h, H);
+  const tmp = new Uint8Array(W * h);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < W; x++) {
+      const [xmin, k] = ch[x]; let s = 2097152;
+      for (let i = 0; i < k.length; i++) s += src[y * w + xmin + i] * k[i];
+      tmp[y * W + x] = recortar8(s);
+    }
+  const out = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) {
+    const [ymin, k] = cv[y];
+    for (let x = 0; x < W; x++) {
+      let s = 2097152;
+      for (let i = 0; i < k.length; i++) s += tmp[(ymin + i) * W + x] * k[i];
+      out[y * W + x] = recortar8(s);
+    }
+  }
+  return out;
+}
+
+function preprocesar(img) {
+  const w = img.naturalWidth, h = img.naturalHeight;
+  if (Math.min(w, h) < 32) throw new Error("Imagen inválida: debe ser de al menos 32 × 32 píxeles.");
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const ctx = c.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0);
+  const rgba = ctx.getImageData(0, 0, w, h).data;
+  const gris = new Float32Array(w * h);
+  let suma = 0, suma2 = 0;
+  for (let i = 0; i < w * h; i++) {
+    const v = (rgba[4 * i] + rgba[4 * i + 1] + rgba[4 * i + 2]) / 3;
+    gris[i] = v; suma += v; suma2 += v * v;
+  }
+  const media = suma / gris.length;
+  if (Math.sqrt(Math.max(0, suma2 / gris.length - media * media)) < 1e-3)
+    throw new Error("Imagen inválida: parece vacía o de un solo color.");
+  const u8 = aUint8(gris);
+  const s = Math.max(w, h), ox = Math.floor((s - w) / 2), oy = Math.floor((s - h) / 2);
+  const cuadrada = new Uint8Array(s * s);
+  for (let y = 0; y < h; y++) cuadrada.set(u8.subarray(y * w, (y + 1) * w), (y + oy) * s + ox);
+  const r = redimensionar(cuadrada, s, s, N, N);
+  const datos = new Float32Array(3 * N * N);
+  for (let c2 = 0; c2 < 3; c2++)
+    for (let i = 0; i < N * N; i++) datos[c2 * N * N + i] = (r[i] / 255 - MEAN[c2]) / STD[c2];
+  return new ort.Tensor("float32", datos, [1, 3, N, N]);
+}
+
+async function clasificar() {
+  if (!imagenActual || !sesion) return;
+  $("estado").textContent = "Clasificando…";
+  try {
+    const entrada = preprocesar(imagenActual);
+    const salida = await sesion.run({ [sesion.inputNames[0]]: entrada });
+    const [a, b] = salida[sesion.outputNames[0]].data;
+    const m = Math.max(a, b), ea = Math.exp(a - m), eb = Math.exp(b - m);
+    const p = eb / (ea + eb);
+    console.log("puntuacion_maligna", p);
+    const maligna = p >= UMBRAL;
+    $("clase").textContent = maligna ? "Clase maligna (sospecha alta según el modelo)" : "Clase benigna (sospecha baja según el modelo)";
+    $("detalle").innerHTML = `Puntuación del modelo (maligna): <strong id="puntuacion" data-valor="${p}">${coma(p)}</strong> · umbral: ${coma(UMBRAL)}`;
+    const real = nombreActual && ETIQUETAS[nombreActual];
+    $("real").textContent = real ? `Patología real según CBIS-DDSM: ${real[0]} (partición de ${PARTICION[real[1]] || real[1]}).` : "";
+    $("relleno").style.width = (100 * p).toFixed(2) + "%";
+    $("marca").style.left = (100 * UMBRAL).toFixed(2) + "%";
+    $("etq-umbral").textContent = "umbral " + coma(UMBRAL);
+    $("resultado").style.display = "block";
+    $("estado").textContent = "";
+  } catch (e) {
+    $("resultado").style.display = "none";
+    $("estado").innerHTML = `<span class="error">${e.message || "No se pudo procesar la imagen."}</span>`;
+  }
+}
+
+function cargar(url, nombre) {
+  nombreActual = nombre ? nombre.replace(/\.[^.]+$/, "").replace(/^(benigna|maligna)(_falso_negativo)?_/, "") : null;
+  const img = new Image();
+  img.onload = () => {
+    imagenActual = img;
+    $("zona").innerHTML = ""; $("zona").appendChild(img);
+    $("resultado").style.display = "none";
+    $("clasificar").disabled = !sesion;
+    if (sesion) $("estado").textContent = "Imagen cargada. Pulse Clasificar.";
+  };
+  img.onerror = () => { $("estado").innerHTML = '<span class="error">No se pudo abrir el archivo. Use PNG, JPG, BMP o WEBP.</span>'; };
+  img.src = url;
+}
+
+function cargarArchivo(f) { if (f) cargar(URL.createObjectURL(f), f.name); }
+
+$("zona").onclick = () => $("archivo").click();
+$("archivo").onchange = (e) => cargarArchivo(e.target.files[0]);
+$("zona").ondragover = (e) => { e.preventDefault(); $("zona").classList.add("encima"); };
+$("zona").ondragleave = () => $("zona").classList.remove("encima");
+$("zona").ondrop = (e) => { e.preventDefault(); $("zona").classList.remove("encima"); cargarArchivo(e.dataTransfer.files[0]); };
+$("clasificar").onclick = clasificar;
+$("limpiar").onclick = () => {
+  imagenActual = null; $("archivo").value = "";
+  $("zona").textContent = "Haga clic aquí o arrastre un recorte (PNG, JPG, BMP o WEBP)";
+  $("resultado").style.display = "none"; $("clasificar").disabled = true;
+  $("estado").textContent = sesion ? "" : $("estado").textContent;
+};
+
+for (const [ruta, nombre] of EJEMPLOS) {
+  const d = document.createElement("div"); d.className = "ejemplo";
+  d.innerHTML = `<img src="${ruta}" alt="${nombre}">${nombre}`;
+  d.onclick = () => cargar(ruta, ruta.split("/").pop());
+  $("ejemplos").appendChild(d);
+}
+
+fetch("etiquetas.csv").then((r) => r.ok ? r.text() : "").then((t) => {
+  for (const linea of t.trim().split(/\r?\n/).slice(1)) {
+    const [id, pat, part] = linea.split(",");
+    if (id) ETIQUETAS[id] = [pat === "1" ? "maligna" : "benigna", part];
+  }
+}).catch(() => {});
+
+(async () => {
+  try {
+    ort.env.wasm.numThreads = 1;
+    sesion = await ort.InferenceSession.create("modelo.onnx", { executionProviders: ["wasm"] });
+    $("estado").textContent = "Modelo listo. Cargue una imagen o haga clic en un ejemplo.";
+    if (imagenActual) $("clasificar").disabled = false;
+  } catch (e) {
+    $("estado").innerHTML = '<span class="error">No se pudo cargar el modelo. Recargue la página.</span>';
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>

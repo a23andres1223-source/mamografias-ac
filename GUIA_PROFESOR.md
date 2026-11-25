@@ -1,8 +1,16 @@
 # Guía de ejecución para el docente
 
+## Demostración en línea (recomendada)
+
+Abra **https://andres1223-mamografias.static.hf.space** (página del proyecto: https://huggingface.co/spaces/Andres1223/mamografias). No requiere instalar nada ni iniciar sesión: espere a que cargue el modelo (45 MB), haga clic en un ejemplo o suba un recorte y pulse **Clasificar**. El modelo final, convertido a ONNX, se ejecuta en su navegador con el mismo preprocesamiento que la interfaz Gradio; la imagen no se envía a ningún servidor.
+
+**Más imágenes:** los 1.691 recortes en PNG están en esta carpeta de Google Drive (solo lectura): https://drive.google.com/drive/folders/1aVHj3Scb4ZAW-S-Llsub6KrvAp352mh3. Si se sube un archivo sin cambiarle el nombre, la página muestra también su patología real y su partición (entrenamiento, validación o prueba).
+
+## Interfaz Gradio
+
 El repositorio incluye el modelo final entrenado (`runs/resnet18_base/best.pt`) y tres imágenes de ejemplo (`ejemplos/`), de modo que la interfaz se puede ejecutar sin descargar el conjunto de datos ni volver a entrenar. No se necesita GPU.
 
-## Opción 1: en el computador propio (Windows, macOS o Linux)
+### Opción 1: en el computador propio (Windows, macOS o Linux)
 
 Requisitos: Python 3.10 a 3.13 y Git.
 
@@ -17,7 +25,7 @@ python app.py
 
 La interfaz se abre en el navegador en `http://127.0.0.1:7860`. Para cerrarla, pulse `Ctrl + C` en la terminal.
 
-## Opción 2: en Google Colab (sin instalar nada)
+### Opción 2: en Google Colab
 
 En un cuaderno nuevo de Colab, ejecute en una celda:
 

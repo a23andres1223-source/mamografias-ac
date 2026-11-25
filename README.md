@@ -6,6 +6,10 @@
 Proyecto final de Aprendizaje Computacional – Ingeniería de Sistemas, Universidad de Córdoba.
 **Integrantes:** Andrés Alfonso Burgos y Carmelo de Jesús Quiceno Páez. Informe: [`informe.md`](informe.md).
 
+## Demostración en línea
+
+**https://andres1223-mamografias.static.hf.space**: el modelo final (exportado a ONNX con `web/exportar_onnx.py`) se ejecuta en el navegador, sin instalar nada. Código de la página: `web/index.html`. Más recortes para probar (solo lectura): [carpeta de imágenes PNG en Google Drive](https://drive.google.com/drive/folders/1aVHj3Scb4ZAW-S-Llsub6KrvAp352mh3).
+
 ## Ejecutar la interfaz
 
 El repositorio incluye el modelo final (`runs/resnet18_base/best.pt`) y tres imágenes de ejemplo (`ejemplos/`); no se necesita GPU ni descargar datos:
@@ -52,6 +56,7 @@ Las imágenes no están en el repositorio (`data/` está en `.gitignore`), salvo
 | `runs/` | Configuración, curvas, métricas, figuras y errores de cada corrida |
 | `ejemplos/` | Tres recortes de validación para probar la interfaz |
 | `GUIA_PROFESOR.md` | Cómo ejecutar la interfaz en un computador propio o en Colab |
+| `web/` | Página estática de la demostración en línea (`index.html`), script de exportación a ONNX y etiquetas de las lesiones |
 | `eda/`, `eda_conclusiones.md` | Análisis exploratorio |
 | `hipotesis.md`, `mapeo_etiquetas.md` | Problema, hipótesis y etiquetas |
 | `bitacora.md`, `registro_ia.md` | Bitácora de decisiones y registro de uso de IA |

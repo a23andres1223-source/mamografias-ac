@@ -7,6 +7,7 @@ author:
   - Carmelo de Jesús Quiceno Páez
 date: "Noviembre de 2026"
 repositorio: "github.com/a23andres1223-source/mamografias-ac"
+demo: "andres1223-mamografias.static.hf.space"
 lang: es
 ---
 
@@ -146,7 +147,7 @@ El resultado de H3 indica que, en este caso, el aumento de datos estabilizó el 
 
 ## 9. Interfaz
 
-Se implementó una interfaz web con Gradio que recibe el recorte de una lesión en formato PNG, JPG, BMP o WEBP, aplica el mismo preprocesamiento del entrenamiento y muestra la clase asignada, la puntuación del modelo, el umbral y un aviso sobre el carácter no clínico de la herramienta. Las imágenes vacías o menores de 32 × 32 píxeles se rechazan. En la verificación con imágenes de validación, una lesión maligna (puntuación 0,206) y una benigna (0,036) se clasificaron correctamente, y una imagen vacía fue rechazada. La interfaz incluye estos dos recortes y uno de los falsos negativos como ejemplos que se cargan con un clic y puede ejecutarse sin GPU; el procedimiento se describe en el Anexo A.
+Se implementó una interfaz web con Gradio que recibe el recorte de una lesión en formato PNG, JPG, BMP o WEBP, aplica el mismo preprocesamiento del entrenamiento y muestra la clase asignada, la puntuación del modelo, el umbral y un aviso sobre el carácter no clínico de la herramienta. Las imágenes vacías o menores de 32 × 32 píxeles se rechazan. En la verificación con imágenes de validación, una lesión maligna (puntuación 0,206) y una benigna (0,036) se clasificaron correctamente, y una imagen vacía fue rechazada. La interfaz incluye estos dos recortes y uno de los falsos negativos como ejemplos que se cargan con un clic y puede ejecutarse sin GPU. Para que el prototipo pueda consultarse sin instalar nada, el modelo final se exportó al formato ONNX y se publicó una página web estática en Hugging Face Spaces que realiza la inferencia en el navegador con ONNX Runtime Web y reproduce el mismo preprocesamiento. En los tres ejemplos, las puntuaciones de la página coincidieron con las de PyTorch (diferencia máxima de 2 × 10⁻⁶). Los enlaces y el procedimiento se describen en el Anexo A.
 
 ## 10. Limitaciones y consideraciones éticas
 
@@ -154,7 +155,7 @@ Los resultados se obtuvieron con un único conjunto de datos, compuesto por mamo
 
 ## 11. Reproducibilidad
 
-Las particiones y los entrenamientos usan la semilla 42, y la configuración de cada ejecución se guarda en `runs/<ejecución>/config.json`. La evaluación final se realizó en Google Colab con Python 3.13.16, PyTorch 2.14.1, torchvision 0.29.1 y una GPU Tesla T4; las versiones exactas se encuentran en `requirements-lock.txt` y `entorno.json`. El entrenamiento del modelo final requirió 167,7 segundos. El código, el modelo final entrenado (`runs/resnet18_base/best.pt`) y los resultados de todas las ejecuciones están disponibles en el repositorio https://github.com/a23andres1223-source/mamografias-ac. El flujo completo y los comandos se describen en el archivo `README.md`, las decisiones del proceso en `bitacora.md` y el uso de herramientas de inteligencia artificial en `registro_ia.md`.
+Las particiones y los entrenamientos usan la semilla 42, y la configuración de cada ejecución se guarda en `runs/<ejecución>/config.json`. La evaluación final se realizó en Google Colab con Python 3.13.16, PyTorch 2.14.1, torchvision 0.29.1 y una GPU Tesla T4; las versiones exactas se encuentran en `requirements-lock.txt` y `entorno.json`. El entrenamiento del modelo final requirió 167,7 segundos. El código, el modelo final entrenado (`runs/resnet18_base/best.pt`) y los resultados de todas las ejecuciones están disponibles en el repositorio https://github.com/a23andres1223-source/mamografias-ac. La demostración en línea se encuentra en https://andres1223-mamografias.static.hf.space. El flujo completo y los comandos se describen en el archivo `README.md`, las decisiones del proceso en `bitacora.md` y el uso de herramientas de inteligencia artificial en `registro_ia.md`.
 
 ## 12. Conclusiones
 
@@ -172,9 +173,11 @@ Lee, R. S., Gimenez, F., Hoogi, A., Miyake, K. K., Gorovoy, M. y Rubin, D. L. (2
 
 ## Anexo A. Ejecución del prototipo {#anexo}
 
-El repositorio incluye el modelo final y tres recortes de validación en la carpeta `ejemplos/`, por lo que la interfaz puede ejecutarse sin descargar el conjunto de datos, sin volver a entrenar y sin GPU. La guía completa se encuentra en el archivo `GUIA_PROFESOR.md` del repositorio.
+**Demostración en línea, sin instalar nada.** El prototipo está publicado en https://andres1223-mamografias.static.hf.space (página del proyecto en Hugging Face: https://huggingface.co/spaces/Andres1223/mamografias). Basta con abrir el enlace, esperar a que cargue el modelo (45 MB) y hacer clic en uno de los ejemplos o subir un recorte. La página ejecuta el modelo final, convertido a formato ONNX, dentro del navegador mediante ONNX Runtime Web, con el mismo preprocesamiento de la interfaz Gradio; la imagen no se envía a ningún servidor.
 
-**Opción 1. Computador propio** (Windows, macOS o Linux; requiere Python 3.10 a 3.13 y Git). En una terminal:
+**Más imágenes para probar.** Los 1.691 recortes en PNG están disponibles en una carpeta de Google Drive de solo lectura: https://drive.google.com/drive/folders/1aVHj3Scb4ZAW-S-Llsub6KrvAp352mh3. Cada archivo se nombra con el identificador de la lesión (por ejemplo, `P_00009_RIGHT_CC_mass_1.png`). Si se conserva ese nombre, la página en línea muestra junto al resultado la patología real y la partición a la que pertenece la lesión, tomadas de `web/etiquetas.csv`. Las lesiones de la partición de prueba ya se usaron en la evaluación final.
+
+**Interfaz Gradio en un computador propio** (Windows, macOS o Linux; requiere Python 3.10 a 3.13 y Git). El repositorio incluye el modelo final y tres recortes de validación en `ejemplos/`, por lo que no se necesita GPU ni descargar el conjunto de datos. En una terminal:
 
 ```
 git clone https://github.com/a23andres1223-source/mamografias-ac.git
@@ -185,9 +188,9 @@ pip install -r requirements.txt
 python app.py
 ```
 
-La interfaz se abre en el navegador en `http://127.0.0.1:7860`. La primera instalación tarda unos minutos porque descarga PyTorch.
+La interfaz se abre en `http://127.0.0.1:7860`. La primera instalación tarda unos minutos porque descarga PyTorch.
 
-**Opción 2. Google Colab** (sin instalación). En una celda de un cuaderno nuevo:
+**Interfaz Gradio en Google Colab.** En una celda de un cuaderno nuevo:
 
 ```
 !git clone https://github.com/a23andres1223-source/mamografias-ac.git
@@ -198,9 +201,9 @@ La interfaz se abre en el navegador en `http://127.0.0.1:7860`. La primera insta
 
 Tras unos 30 segundos aparece un enlace `https://….gradio.live` que abre la interfaz.
 
-**Uso.** Se hace clic en uno de los ejemplos o se sube un recorte (PNG, JPG, BMP o WEBP) y se pulsa *Clasificar*. La interfaz muestra la clase asignada, la puntuación del modelo y el umbral de 0,045. Los ejemplos ilustran un acierto benigno (puntuación 0,036), un acierto maligno (0,206) y un falso negativo (0,002), este último analizado en la sección 7.
+**Uso.** Se carga un recorte (PNG, JPG, BMP o WEBP) o se elige un ejemplo y se pulsa *Clasificar*. Se muestran la clase asignada, la puntuación del modelo y el umbral de 0,045. Los ejemplos ilustran un acierto benigno, un acierto maligno y un falso negativo, este último analizado en la sección 7.
 
-: Ejemplos incluidos en el repositorio
+: Ejemplos incluidos en la demostración y en el repositorio
 
 | Archivo | Patología real | Resultado del modelo |
 |---|---|---|
@@ -208,4 +211,4 @@ Tras unos 30 segundos aparece un enlace `https://….gradio.live` que abre la in
 | `maligna_P_00009_RIGHT_CC_mass_1.png` | Maligna | Maligna (0,206) |
 | `maligna_falso_negativo_P_01744_LEFT_MLO_mass_1.png` | Maligna | Benigna (0,002) |
 
-Las métricas, curvas, matrices de confusión y listados de errores de cada modelo están en `runs/<modelo>/`. Para repetir el entrenamiento se necesitan las imágenes de CBIS-DDSM; los pasos se describen en la sección «Cómo reproducir» del `README.md`.
+Las métricas, curvas, matrices de confusión y listados de errores de cada modelo están en `runs/<modelo>/`. La guía detallada está en `GUIA_PROFESOR.md` y los pasos para repetir el entrenamiento, en la sección «Cómo reproducir» del `README.md`.

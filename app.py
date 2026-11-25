@@ -18,6 +18,7 @@ from imaging import to_uint8
 DISCLAIMER = "⚠️ " + C.DISCLAIMER
 ALLOWED = "PNG, JPG, JPEG, BMP o WEBP (recorte de lesión en escala de grises o color). No se admite DICOM directo."
 EJEMPLOS = sorted((C.ROOT / "ejemplos").glob("*.png"))
+MAS_IMAGENES = "https://drive.google.com/drive/folders/1aVHj3Scb4ZAW-S-Llsub6KrvAp352mh3"
 
 
 def build_app(run_name):
@@ -54,7 +55,7 @@ def build_app(run_name):
 
     with gr.Blocks(title="Clasificación de lesiones mamográficas") as demo:
         gr.Markdown(f"# Clasificación de lesiones mamográficas (benigna / maligna)\n## {DISCLAIMER}")
-        gr.Markdown(f"Formatos admitidos: {ALLOWED}")
+        gr.Markdown(f"Formatos admitidos: {ALLOWED}. Más recortes para probar: [carpeta de imágenes PNG]({MAS_IMAGENES}).")
         with gr.Row():
             inp = gr.Image(type="pil", label="Recorte de la lesión")
             with gr.Column():
